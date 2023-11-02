@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pn
 import scipy.stats as stats
+from arviz.sel_utils import xarray_var_iter, make_label
+from arviz.utils import _var_names, get_coords
+
 from .joyplot import joyplot
 
 from typing import Union
@@ -12,12 +15,10 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 import seaborn as sns
-from arviz.plots.jointplot import *
-from arviz.plots.plot_utils import make_label, _scale_fig_size
-from arviz import plot_kde, plot_dist
-from arviz.plots.jointplot import _var_names
+from arviz.plots.plot_utils import _scale_fig_size
+from arviz import plot_kde, plot_dist, convert_to_dataset
 from arviz.plots.kdeplot import _fast_kde_2d
-from arviz.stats import hpd
+from arviz import hdi
 import arviz
 
 
@@ -91,9 +92,9 @@ class PlotPosterior:
         if joyplot is True:
             self.n_samples = n_samples
             if marginal is False and likelihood is False:
-                self.joy = self._create_joy_axis(self.fig, gs_0[:, :])
+                self.joy = np.array(self._create_joy_axis(self.fig, gs_0[:, :]))
             else:
-                self.joy = self._create_joy_axis(self.fig, gs_0[1:2, 4:])
+                self.joy = np.array(self._create_joy_axis(self.fig, gs_0[1:2, 4:]))
 
     def _create_joint_axis(self, figure=None, subplot_spec=None, figsize=None, textsize=None):
         figsize, ax_labelsize, _, xt_labelsize, linewidth, _ = _scale_fig_size(figsize, textsize)
@@ -177,8 +178,8 @@ class PlotPosterior:
         marginal_kwargs['fill_kwargs'].setdefault('alpha', .8)
 
         # Flatten data
-        x = plotters[0][2].flatten()[:iteration]
-        y = plotters[1][2].flatten()[:iteration]
+        x = plotters[0][3].flatten()[:iteration]
+        y = plotters[1][3].flatten()[:iteration]
 
         for val, ax, rotate in ((x, self.ax_hist_x, False), (y, self.ax_hist_y, True)):
             plot_dist(val, textsize=self.xt_labelsize, rotated=rotate, ax=ax, **marginal_kwargs)
@@ -194,8 +195,8 @@ class PlotPosterior:
         self.axjoin.tick_params(labelsize=self.xt_labelsize)
 
         # Flatten data
-        x = plotters[0][2].flatten()[:iteration]
-        y = plotters[1][2].flatten()[:iteration]
+        x = plotters[0][3].flatten()[:iteration]
+        y = plotters[1][3].flatten()[:iteration]
 
         if kind == "scatter":
             self.axjoin.scatter(x, y, **joint_kwargs)
@@ -368,10 +369,10 @@ class PlotPosterior:
 
     @staticmethod
     def compute_hpd(plotters, iteration=-1, credible_interval=.98):
-        x = plotters[0][2].flatten()[:iteration]
-        y = plotters[1][2].flatten()[:iteration]
-        x_min, x_max = hpd(x, credible_interval=credible_interval)
-        y_min, y_max = hpd(y, credible_interval=credible_interval)
+        x = plotters[0][3].flatten()[:iteration]
+        y = plotters[1][3].flatten()[:iteration]
+        x_min, x_max = hdi(x, credible_interval=credible_interval)
+        y_min, y_max = hdi(y, credible_interval=credible_interval)
         return x_min, x_max, y_min, y_max
 
     def set_likelihood_limits(self, val, type):
@@ -496,7 +497,7 @@ class PlotPosterior:
                  data=None, iteration=-1, samples_size=1000, cmap='auto'):
         """
 
-        A0rgs:
+        Args:
             var_names: mu and sigma of the likelihood!
             obs:
             data:
@@ -524,11 +525,10 @@ class PlotPosterior:
         coords = {}
         var_names = _var_names(var_names, data)
 
-        plotters = list(
-            xarray_var_iter(get_coords(data, coords), var_names=var_names, combined=True))
+        plotters = list( xarray_var_iter(get_coords(data, coords), var_names=var_names, combined=True))
 
-        x = plotters[0][2].flatten()
-        y = plotters[1][2].flatten()
+        x = plotters[0][3].flatten()
+        y = plotters[1][3].flatten()
 
         n_data = x.shape[0]
         # This is the special case if n_samples is smaller than the number of bells to plot
