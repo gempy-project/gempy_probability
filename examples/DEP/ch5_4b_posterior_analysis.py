@@ -4,7 +4,7 @@
 
  # These two lines are necessary only if GemPy is not installed
 import sys, os
-sys.path.append("../../gempy")
+sys.path.append("../../../gempy")
 os.environ["aesara_FLAGS"] = "mode=FAST_RUN,device=cuda"
 
 # Importing GemPy
