@@ -11,11 +11,11 @@ Type of probabilistic models
 .. _type-of-probabilistic-models:
 
 .. figure:: ../_static/Model_type.png
-:align: center
-:width: 100%
+   :align: center
+   :width: 100%
 
-Example of computational graph expressing simple probabilistic model
-:name: fig-model-type
+   Example of computational graph expressing simple probabilistic model
+   :name: fig-model-type
 
 Depending on the type of phenomenon analyzed and the model complexity, two different categories of problems emerge: Wide data and Long data. Long data problems are characterized by a large number of repetitions of the same phenomenon, allowing all sorts of machine learning and big data approaches. Wide data, on the other hand, features few repetitions of several phenomena that rely on complex mathematical models to relate them [1]_. Structural geology is an unequivocal example of the second case due to the sheer size and scale it is aimed to be modeled. For this reason, a systematic way to include domain knowledge into the system via informative prior distributions becomes a powerful tool in the endeavor of integrating as much information as possible in a single mathematical model.
 
