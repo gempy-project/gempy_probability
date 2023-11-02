@@ -139,12 +139,16 @@ sphinx_gallery_conf = {
         "../../examples/intro",
         "../../examples/first_example_of_inference",
         "../../examples/basic_geology",
+        "../../examples/probabilistic_inversion",
+        "../../examples/utils",
     ],
     # path where to save gallery generated examples
     "gallery_dirs"           : [
         "examples_intro",
         "examples_first_example_of_inference",
         "examples_basic_geology",
+        "examples_probabilistic_inversion",
+        "examples_utils",
     ],
     "filename_pattern": r"\.py",
     "download_all_examples"  : False,  # Remove the "Download all examples" button from the top level gallery

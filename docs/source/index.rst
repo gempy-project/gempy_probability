@@ -35,6 +35,8 @@ Contents:
    examples_intro/index
    examples_first_example_of_inference/index
    examples_basic_geology/index
+   examples_probabilistic_inversion/index
+   examples_utils/index
 
 .. toctree::
    :maxdepth: 2
