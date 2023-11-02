@@ -1,14 +1,16 @@
-﻿**Result description and Some words about uninformative prior**
+﻿Result description and Some words about uninformative prior
+------------------------------------------------------------
 
 .. _result-description-and-some-words-about-uninformative-prior:
 
 The first thing that comes to mind by looking at the results is that the model choice has a clear impact on the final result although the more observations are included the more similar both models get indistinctively of the priors. Therefore, it is interesting to compare the two cases with just one observation (Figure :numref:`fig-models1`, above), curiously enough, the probabilistic model with the normal distribution underrepresents the model uncertainty—assuming that the simulations c) and d) are closer to the real data generating process—while the uniform clearly portrays too much variance. Once again, considering that the only window to the data generating model are indirect observation of a phenomenon, in regimes of low and/or noisy data points there is only so much information we can extract from the data. This is to say that there are not truly uninformative prior distributions—although there are theoretical limits such as maximum entropy—and therefore the best we can do is to use the knowledge of the practitioner as *first educated guess*.
 
-**Type of probabilistic models**
+Type of probabilistic models
+----------------------------
 
 .. _type-of-probabilistic-models:
 
-.. figure:: Model_type.pdf
+.. figure:: ../_static/Model_type.png
 :align: center
 :width: 100%
 
@@ -17,7 +19,8 @@ Example of computational graph expressing simple probabilistic model
 
 Depending on the type of phenomenon analyzed and the model complexity, two different categories of problems emerge: Wide data and Long data. Long data problems are characterized by a large number of repetitions of the same phenomenon, allowing all sorts of machine learning and big data approaches. Wide data, on the other hand, features few repetitions of several phenomena that rely on complex mathematical models to relate them [1]_. Structural geology is an unequivocal example of the second case due to the sheer size and scale it is aimed to be modeled. For this reason, a systematic way to include domain knowledge into the system via informative prior distributions becomes a powerful tool in the endeavor of integrating as much information as possible in a single mathematical model.
 
-**Priors as joint probability**
+Priors as joint probability
+---------------------------
 
 .. _priors-as-joint-probability:
 
