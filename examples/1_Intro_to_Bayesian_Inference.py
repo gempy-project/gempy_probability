@@ -12,7 +12,7 @@ Changes in the environment---maybe some earthquake---or in the way we gather the
 device or simply our eyes got tired over the years---will also influence which observations \( y \) we end up with.
 No matter the exact source of the variability, all these processes define the Observation space, \( Y \). Any
 observational space is going to have some kind of structure that can be modeled for a probability density function
-called *data generating process* \( \pi^\dagger \). In other words, there is a latent process---which is a complex
+called *data generating process* \( math: `{\pi}`). In other words, there is a latent process---which is a complex
 combination of several dynamics and limitations---that every time we perform a measurement will yield a value following
 certain probability function. Now, to the question what is the thickness of the layer, the answer that better describe
 the 120 measurements will have to be a probability density function instead a single value but how can we know what
@@ -144,6 +144,7 @@ plt.show()
 
 # %%
 # License
+# =======
 # The code in this case study is copyrighted by Miguel de la Varga and licensed under the new BSD (3-clause) license:
 # 
 # https://opensource.org/licenses/BSD-3-Clause
