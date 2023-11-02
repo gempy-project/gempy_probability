@@ -40,6 +40,7 @@ if not os.path.exists(pyvista.FIGURE_PATH):
 
 sys.path.insert(0, os.path.abspath('.'))
 
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -135,15 +136,11 @@ linkcheck_timeout = 500
 sphinx_gallery_conf = {
     # path to your examples scripts
     "examples_dirs"          : [
-        "../../examples/tutorials",
-        "../../examples/examples",
-        # "../../examples/integrations",
+        "../../examples/",
     ],
     # path where to save gallery generated examples
     "gallery_dirs"           : [
-        'tutorials',
         "examples",
-        # 'integrations'
     ],
     "filename_pattern": r"\.py",
     "download_all_examples"  : False,  # Remove the "Download all examples" button from the top level gallery
