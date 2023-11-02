@@ -1,5 +1,5 @@
-Probabilistic Machine Learning for Structural Geology
-======================================================
+Intro
+=====
 
 It is not possible to understand the scope and limitations of probability machine learning without a precise definition of what we refer by model—at least in the context of this paper. Probabilistic models allow to integrate mathematical abstractions and observations of the physical world on a rigorous and consistent manner. A model, :math:`\mathcal{M}`, simply put, is a symbolic representation of the world directed to find causality in order to enable predictions, in dimensions---e.g locations or time---where we do not have direct access to physical observations.
 
@@ -16,10 +16,13 @@ Due to the limitations gathering independent information from reality, mapping m
       Example of computational graph expressing simple probabilistic model
 
 
-Back to geology: How thick is my layer?
----------------------------------------
 
-**Problem introduction**
+Problem introduction
+--------------------
+
+Back to geology: How thick is my layer?
+```````````````````````````````````````
+
 
 Let's start with the simplest model in structural geology we have been able to come up and trying to be agonizingly pedantic about it. You want to model the thickness of one layer on one specific outcrop and we want to be right. To be sure, we will go during 10 years once per month with a tape measure and we will write down the value on the tape. Finally, 10 years have passed and we are ready to give a conclusive answer. However, out of 120 observations, there are 120 distinct numbers. The first thing we need to reconcile is that any measurements of any phenomenon are isolated. Changes in the environment---maybe some earthquake---or in the way we gather the data---we changed the measurement device or simply our eyes got tired over the years---will also influence which observations :math:`y` we end up with. No matter the exact source of the variability, all these processes define the Observation space, :math:`Y`. Any observational space is going to have some kind of structure that can be modeled for a probability density function called *data generating process* :math:`\pi^\dagger`. In other words, there is a latent process---which is a complex combination of several dynamics and limitations---that every time we perform a measurement will yield a value following a certain probability function. Now, to the question what is the thickness of the layer, the answer that better describe the 120 measurements will have to be a probability density function instead of a single value but how can we know what probability function is the right one?
 
@@ -58,3 +61,14 @@ Once the model is defined we need to infer the set of parameters :math:`\Theta` 
    Bayesian inference applied to the problem.
 
 Bayesian inference is based on using the actual observations of reality, :math:`\tilde{y}`, as conditional probability of a prior definition of :math:`\Theta`. This construct enables to infer—learn—which model parameters will fit better the observation by “optimising’’ for regions of high-density mass. The simplicity of Bayes equation hides an elegant modular formulation that allows infinite complex trees of conditional probability. However, the dependency of a multidimensional integral has limited its adoption in engineering and other highly complex models. Thankfully, due to the latest advancements in algorithms and computing resources, we are at the dawn of scaling Bayesian networks to a level capable to substantially
+
+License
+-------
+The code in this case study is copyrighted by Miguel de la Varga and licensed under the new BSD (3-clause) license:
+
+https://opensource.org/licenses/BSD-3-Clause
+
+The text and figures in this case study are copyrighted by Miguel de la Varga and licensed under the CC BY-NC 4.0 license:
+
+https://creativecommons.org/licenses/by-nc/4.0/
+Make sure to replace the links with actual hyperlinks if you're using a platform that supports it (e.g., Markdown or HTML). Otherwise, the plain URLs work fine for plain text.

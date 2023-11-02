@@ -1,6 +1,10 @@
+﻿Basic Geology
+=============
+
+foobar
 
 License
-=======
+-------
 The code in this case study is copyrighted by Miguel de la Varga and licensed under the new BSD (3-clause) license:
 
 https://opensource.org/licenses/BSD-3-Clause

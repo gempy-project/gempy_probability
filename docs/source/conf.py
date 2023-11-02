@@ -136,11 +136,15 @@ linkcheck_timeout = 500
 sphinx_gallery_conf = {
     # path to your examples scripts
     "examples_dirs"          : [
-        "../../examples/",
+        "../../examples/intro",
+        "../../examples/first_example_of_inference",
+        "../../examples/basic_geology",
     ],
     # path where to save gallery generated examples
     "gallery_dirs"           : [
-        "examples",
+        "examples_intro",
+        "examples_first_example_of_inference",
+        "examples_basic_geology",
     ],
     "filename_pattern": r"\.py",
     "download_all_examples"  : False,  # Remove the "Download all examples" button from the top level gallery
@@ -154,8 +158,8 @@ sphinx_gallery_conf = {
     'reference_url'          : {
         'gempy': None,  # The module you locally document uses None
         'numpy': 'https://numpy.org/doc/stable/'
-
     },
+    "nested_sections"        : False,
 }
 
 # endregion

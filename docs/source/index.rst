@@ -1,5 +1,5 @@
 .. ../logos/gempy1.png
-   :width: 30%
+:width: 30%
 
 About
 =====
@@ -16,7 +16,7 @@ probabilistic programming framework and allows for the integration of
 probabilistic models into the geological modeling workflow.
 
 .. Check out the documentation either in `gempy.org <https://www.gempy.org/>`_
- (better option), or `read the docs <http://gempy.readthedocs.io/>`_.
+(better option), or `read the docs <http://gempy.readthedocs.io/>`_.
 
 
 
@@ -30,10 +30,11 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
-   :caption: Getting started
+   :caption: Probabilistic modeling for Structural Geology
 
-   tutorials/index
-   examples/index
+   examples_intro/index
+   examples_first_example_of_inference/index
+   examples_basic_geology/index
 
 .. toctree::
    :maxdepth: 2
