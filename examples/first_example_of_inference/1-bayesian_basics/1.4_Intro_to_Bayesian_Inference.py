@@ -1,7 +1,6 @@
 """
-Intro to Bayesian Inference - Normal Prior, single observation
-==============================================================
-
+Normal Prior, single observation
+================================
 
 """
 # sphinx_gallery_thumbnail_number = -1

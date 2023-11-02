@@ -1,2 +1,2 @@
-﻿First example of inference using Pyro
-=====================================
+﻿First example of inference
+==========================

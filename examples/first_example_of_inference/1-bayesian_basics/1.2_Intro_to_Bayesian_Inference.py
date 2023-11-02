@@ -1,6 +1,6 @@
 """
-Intro to Bayesian Inference - Uniform Prior, several observations
-=================================================================
+Uniform Prior, several observations
+===================================
 
 """
 # sphinx_gallery_thumbnail_number = -1

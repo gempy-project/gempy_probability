@@ -1,6 +1,6 @@
 """
-Intro to Bayesian Inference - Uniform Prior, single observation
-===============================================================
+Uniform Prior, single observation
+=================================
 
 
 """

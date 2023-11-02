@@ -1,5 +1,5 @@
-Simple example: Moving the bell
-```````````````````````````````
+Simple example using Pyro: Moving the bell
+``````````````````````````````````````````
 
 We can sum up the workflow above in the following steps: 
 

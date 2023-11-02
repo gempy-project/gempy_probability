@@ -1,6 +1,6 @@
 """
-Intro to Bayesian Inference - Normal Prior, several observations
-================================================================
+Normal Prior, several observations
+==================================
 
 
 """

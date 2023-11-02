@@ -1,4 +1,4 @@
-﻿Result description and Some words about uninformative prior
+﻿Result description and some words about uninformative prior
 -----------------------------------------------------------
 
 .. _result-description-and-some-words-about-uninformative-prior:
