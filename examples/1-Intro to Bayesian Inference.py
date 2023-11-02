@@ -3,21 +3,20 @@ Intro to Bayesian Inference
 ===========================
 
 
-Let's start with the simplest model in structural geology we have been able to come up and trying to be
-agonizingly pedantic about it. You want to model the thickness of one layer on one specific outcrop and we
-want to be right. To be sure, we will go during 10 years once per month with a tape measure and we will
-write down the value on the tape. Finally, 10 years have passed and we are ready to give a conclusive answer.
-However out of 120 observations there are 120 distinct numbers. The first thing we need to reconcile is that any
-measurements of any phenomenon are isolated. Changes in the environment---maybe some earthquake---or in the way we
-gather the data---we changed the measurement device or simply our eyes got tired over the years---will also influence
-which observations \( y \) we end up with. No matter the exact source of the variability, all these processes define the
-Observation space, \( Y \). Any observational space is going to have some kind of structure that can be modeled for a
-probability density function called *data generating process* \( \pi^\dagger \). In other words, there is a latent
-process---which is a complex combination of several dynamics and limitations---that every time we perform a measurement
-w;ll yield a value following certain probability function. Now, to the question what is the thickness of the layer, the
-answer that better describe the 120 measurements will have to be a probability density function instead a single value
-but how can we know what probability function is the right one?
-
+Let's start with the simplest model in structural geology we have been able to come up and trying to be agonizingly
+pedantic about it. You want to model the thickness of one layer on one specific outcrop and we want to be right. To be
+sure, we will go during 10 years once per month with a tape measure and we will write down the value on the tape.
+Finally, 10 years have passed and we are ready to give a conclusive answer. However out of 120 observations there are
+120 distinct numbers. The first thing we need to reconcile is that any measurements of any phenomenon are isolated.
+Changes in the environment---maybe some earthquake---or in the way we gather the data---we changed the measurement
+device or simply our eyes got tired over the years---will also influence which observations \( y \) we end up with.
+No matter the exact source of the variability, all these processes define the Observation space, \( Y \). Any
+observational space is going to have some kind of structure that can be modeled for a probability density function
+called *data generating process* \( \pi^\dagger \). In other words, there is a latent process---which is a complex
+combination of several dynamics and limitations---that every time we perform a measurement will yield a value following
+certain probability function. Now, to the question what is the thickness of the layer, the answer that better describe
+the 120 measurements will have to be a probability density function instead a single value but how can we know what
+probability function is the right one?
 """
 
 import torch
