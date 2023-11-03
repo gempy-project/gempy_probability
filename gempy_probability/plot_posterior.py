@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pn
 import scipy.stats as stats
+import xarray
 from arviz.sel_utils import xarray_var_iter, make_label
 from arviz.utils import _var_names, get_coords
 
@@ -21,28 +22,27 @@ from arviz.plots.kdeplot import _fast_kde_2d
 from arviz import hdi
 import arviz
 
-
 # Seaborn style
 sns.set(style="white", rc={"axes.facecolor": (0, 0, 0, 0)})
 
 # Discrete cmap
-    # seaborn palette
+# seaborn palette
 pal_disc = sns.cubehelix_palette(10, rot=-.25, light=.7)
 pal_disc_l = sns.cubehelix_palette(10)
 
-    # matplotlib cmap
+# matplotlib cmap
 my_cmap = ListedColormap(pal_disc)
 my_cmap_l = ListedColormap(pal_disc_l)
 
 # Continuous cmap
-    # seaborn palette
+# seaborn palette
 pal_cont_light = sns.cubehelix_palette(250, rot=-.25, light=1)
 pal_cont = sns.cubehelix_palette(250, rot=-.25, light=.7)
 
 pal_cont_l = sns.cubehelix_palette(250)
 pal_cont_l_light = sns.cubehelix_palette(250, light=1)
 
-    # matplotlib cmap
+# matplotlib cmap
 my_cmap_full = ListedColormap(pal_cont)
 my_cmap_full_light = ListedColormap(pal_cont_light)
 
@@ -77,7 +77,7 @@ class PlotPosterior:
                 self.marginal_axes = self._create_joint_axis(figure=self.fig, subplot_spec=gs_0[0:2, 0:4])
             elif likelihood is False and joyplot is False:
                 self.marginal_axes = self._create_joint_axis(figure=self.fig, subplot_spec=gs_0[:, :])
-    
+
             else:
                 self.marginal_axes = self._create_joint_axis(figure=self.fig, subplot_spec=gs_0[0:2, 0:3])
 
@@ -202,17 +202,17 @@ class PlotPosterior:
             self.axjoin.scatter(x, y, **joint_kwargs)
         elif kind == "kde":
             if False:
-                gridsize = (128, 128)# if contour else (256, 256)
+                gridsize = (128, 128)  # if contour else (256, 256)
 
                 density, xmin, xmax, ymin, ymax = _fast_kde_2d(x, y, gridsize=gridsize)
 
-             #   self.axjoin.scatter(x, y, density)
+                #   self.axjoin.scatter(x, y, density)
                 self.axjoin.imshow(density)
             else:
                 if 'contour' not in joint_kwargs:
-                    joint_kwargs.setdefault('contour', True) 
+                    joint_kwargs.setdefault('contour', True)
                 fill_last = joint_kwargs.get('fill_last', False)
-                
+
                 try:
                     self.foo = plot_kde(x, y, fill_last=fill_last, ax=self.axjoin, **joint_kwargs)
                 except ValueError:
@@ -229,8 +229,8 @@ class PlotPosterior:
     def plot_trace(self, plotters, iteration, n_iterations=20):
         i_0 = np.max([0, (iteration - n_iterations)])
 
-        theta1_val_trace = plotters[0][2].flatten()[i_0:iteration+1]
-        theta2_val_trace = plotters[1][2].flatten()[i_0:iteration+1]
+        theta1_val_trace = plotters[0][3].flatten()[i_0:iteration + 1]
+        theta2_val_trace = plotters[1][3].flatten()[i_0:iteration + 1]
 
         theta1_val = theta1_val_trace[-1]
         theta2_val = theta2_val_trace[-1]
@@ -239,8 +239,7 @@ class PlotPosterior:
         self.axjoin.plot(theta1_val, theta2_val, 'bo', ms=6, color='k')
 
         # Plot a trace of n_iterations
-        pair_x_array = np.vstack(
-            (theta1_val_trace[:-1], theta1_val_trace[1:])).T
+        pair_x_array = np.vstack( (theta1_val_trace[:-1], theta1_val_trace[1:])).T
         pair_y_array = np.vstack((theta2_val_trace[:-1], theta2_val_trace[1:])).T
         for i, pair_x in enumerate(pair_x_array):
             alpha_val = i / pair_x_array.shape[0]
@@ -254,7 +253,7 @@ class PlotPosterior:
                       coords=None, credible_interval=.98,
                       marginal_kwargs=None, marginal_kwargs_prior=None,
                       joint_kwargs=None, joint_kwargs_prior=None):
-        
+
         self.axjoin.clear()
         self.ax_hist_x.clear()
         self.ax_hist_y.clear()
@@ -300,7 +299,6 @@ class PlotPosterior:
             joint_kwargs['pcolormesh_kwargs'].setdefault('cmap', my_cmap_full_l_light)
             joint_kwargs['pcolormesh_kwargs'].setdefault('alpha', 1)
 
-
         marginal_kwargs.setdefault('fill_kwargs', {})
         marginal_kwargs.setdefault("plot_kwargs", {})
         marginal_kwargs["plot_kwargs"]["linewidth"] = self.linewidth
@@ -310,7 +308,6 @@ class PlotPosterior:
         marginal_kwargs['fill_kwargs'].setdefault('alpha', .8)
 
         if group == 'both' or group == 'posterior':
-
             self.plot_joint_posterior(plotters, kind=kind, iteration=iteration, **joint_kwargs)
             self.plot_marginal_posterior(plotters, iteration=iteration, **marginal_kwargs)
 
@@ -328,7 +325,6 @@ class PlotPosterior:
             marginal_kwargs_prior["plot_kwargs"]["linewidth"] = self.linewidth
 
             if kind == 'kde':
-
                 joint_kwargs_prior.setdefault('contourf_kwargs', {})
                 joint_kwargs_prior.setdefault('contour_kwargs', {})
                 joint_kwargs_prior.setdefault('pcolormesh_kwargs', {})
@@ -340,7 +336,6 @@ class PlotPosterior:
 
                 joint_kwargs_prior['pcolormesh_kwargs'].setdefault('cmap', my_cmap_full_light)
                 joint_kwargs_prior['pcolormesh_kwargs'].setdefault('alpha', alpha_p)
-
 
             marginal_kwargs_prior["plot_kwargs"].setdefault('color', default_blue)
             marginal_kwargs_prior['fill_kwargs'].setdefault('color', default_blue)
@@ -359,7 +354,7 @@ class PlotPosterior:
                                                           credible_interval=credible_interval)
         if plot_trace is True:
             self.plot_trace(plotters, iteration, n_iterations)
-        
+
         self.axjoin.set_xlim(x_min, x_max)
         self.axjoin.set_ylim(y_min, y_max)
         self.ax_hist_x.set_xlim(self.axjoin.get_xlim())
@@ -406,7 +401,7 @@ class PlotPosterior:
                 self._yma_list = val
                 self.y_max_like = np.max(self._yma_list)
 
-    def plot_normal_likelihood(self, mean:Union[str, float], std:Union[str, float], obs:Union[str, float],
+    def plot_normal_likelihood(self, mean: Union[str, float], std: Union[str, float], obs: Union[str, float],
                                data=None, iteration=-1, x_range=None, color='auto', **kwargs):
         self.likelihood_axes.clear()
 
@@ -415,7 +410,12 @@ class PlotPosterior:
         if data is None:
             data = self.data
 
-        draw = data.posterior[{'chain':0, 'draw':iteration}]
+        draw_posterior = data.posterior[{'chain': 0, 'draw': iteration}]
+        draw_posterior_predictive = data.posterior_predictive[{'chain': 0, 'draw': iteration}]
+
+        # TODO: WE are going to have to handle the case of null posterior predictive
+        draw = xarray.merge(( draw_posterior, draw_posterior_predictive ))
+        
         draw_mu = draw[mean] if type(mean) is str else mean
         draw_sigma = draw[std] if type(std) is str else std
         obs = data.observed_data[obs] if type(obs) is str else obs
@@ -427,8 +427,8 @@ class PlotPosterior:
             thick_min = x_range[0]
             thick_max = x_range[1]
         else:
-            thick_max = self.x_max_like # draw_mu + 3 * draw_sigma
-            thick_min = self.x_min_like # draw_mu - 3 * draw_sigma
+            thick_max = self.x_max_like  # draw_mu + 3 * draw_sigma
+            thick_min = self.x_min_like  # draw_mu - 3 * draw_sigma
 
         thick_vals = np.linspace(thick_min, thick_max, 100)
         observation = np.asarray(obs)
@@ -488,7 +488,7 @@ class PlotPosterior:
         # self.likelihood_axes.set_ylim(y_min, y_max)
         self.likelihood_axes.set_xlim(thick_min, thick_max)
 
-       # self.likelihood_axes.set_xlim(self.x_min_like, self.x_max_like)
+        # self.likelihood_axes.set_xlim(self.x_min_like, self.x_max_like)
         self.likelihood_axes.set_ylim(0, self.y_max_like)
 
         return self.likelihood_axes, self.cmap_l
@@ -521,11 +521,22 @@ class PlotPosterior:
 
         obs = data.observed_data[obs] if type(obs) is str else obs
 
-        data = convert_to_dataset(data, group="posterior")
+        # data = convert_to_dataset(data, group="posterior")
         coords = {}
-        var_names = _var_names(var_names, data)
+        # var_names = _var_names(var_names, data)
 
-        plotters = list( xarray_var_iter(get_coords(data, coords), var_names=var_names, combined=True))
+        plotters_in_posterior = list(xarray_var_iter(
+            data=get_coords(data, coords),
+            var_names=var_names,
+            combined=True
+        ) )
+        plotters_in_posterior_predictive = list(xarray_var_iter(
+            data=get_coords(data.posterior_predictive, coords),
+            var_names=var_names,
+            combined=True
+        ) )
+
+        plotters = plotters_in_posterior + plotters_in_posterior_predictive
 
         x = plotters[0][3].flatten()
         y = plotters[1][3].flatten()
@@ -537,7 +548,7 @@ class PlotPosterior:
             l_1 = int(self.n_samples)
             iteration_label[-1] = 0
             iteration_label[0] = l_1
-        elif iteration > n_data - self.n_samples/2:
+        elif iteration > n_data - self.n_samples / 2:
             l_0 = int(n_data - self.n_samples)
             l_1 = n_data
             iteration_label[-1] = l_0
@@ -558,7 +569,7 @@ class PlotPosterior:
 
         color = []
 
-        for e in range(l_1-l_0):
+        for e in range(l_1 - l_0):
             e = -e - 1
             num = np.random.normal(loc=x[e], scale=y[e], size=samples_size)
             name = e + (iteration - int(n_iterations / 2))
@@ -592,17 +603,17 @@ class PlotPosterior:
 
         n_axes = len(axes[:-1])
         if int(n_axes / 2) >= iteration:
-            ax_sel = axes[-iteration-1]
+            ax_sel = axes[-iteration - 1]
             ax_sel.hlines(0, ax_sel.get_xlim()[0], ax_sel.get_xlim()[1], color='#DA8886', linewidth=3)
-        elif iteration > n_data - int(self.n_samples/2):
-            ax_sel = axes[-iteration-self.n_samples+n_data-1]
+        elif iteration > n_data - int(self.n_samples / 2):
+            ax_sel = axes[-iteration - self.n_samples + n_data - 1]
             ax_sel.hlines(0, ax_sel.get_xlim()[0], ax_sel.get_xlim()[1], color='#DA8886', linewidth=3)
         else:
             ax_sel = axes[int(n_axes / 2)]
             ax_sel.hlines(0, ax_sel.get_xlim()[0], ax_sel.get_xlim()[1], color='#DA8886', linewidth=3)
 
         if obs is not None:
-            triangle_size = self.xt_labelsize*5
+            triangle_size = self.xt_labelsize * 5
 
             if self.likelihood_axes is None:
                 self.joy[0].scatter(obs, np.ones_like(obs) * self.joy[0].get_ylim()[1], marker='v',
@@ -613,7 +624,7 @@ class PlotPosterior:
         return axes
 
     def plot_posterior(self, prior_var, like_var, obs, iteration=-1,
-                       marginal_kwargs=None, likelihood_kwargs=None, joy_kwargs = None):
+                       marginal_kwargs=None, likelihood_kwargs=None, joy_kwargs=None):
         if marginal_kwargs is None:
             marginal_kwargs = {}
         if likelihood_kwargs is None:
@@ -622,6 +633,11 @@ class PlotPosterior:
             joy_kwargs = {}
 
         self.plot_marginal(prior_var, iteration=iteration, **marginal_kwargs)
-        _, cmap = self.plot_normal_likelihood(like_var[0], like_var[1], obs, iteration=iteration,
-                                                   **likelihood_kwargs)
+        _, cmap = self.plot_normal_likelihood(
+            like_var[0],
+            like_var[1],
+            obs,
+            iteration=iteration,
+            **likelihood_kwargs
+        )
         self.plot_joy(like_var, obs=obs, iteration=iteration, **joy_kwargs)
