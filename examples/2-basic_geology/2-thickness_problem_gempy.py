@@ -39,5 +39,14 @@ geo_model: gp.data.GeoModel = gp.create_geomodel(
     )
 )
 
-
+# %%
+# Input setting
 plot_geo_setting_well(geo_model=geo_model)
+
+# %%
+# Interpolate initial guess
+gp.compute_model(geo_model)
+plot_geo_setting_well(geo_model=geo_model)
+
+# %%
+
