@@ -1,4 +1,6 @@
-﻿import gempy as gp
+﻿import numpy as np
+
+import gempy as gp
 import gempy_viewer as gpv
 import os
 
@@ -24,9 +26,19 @@ def test_gradients_I():
             backend=gp.data.AvailableBackends.PYTORCH
         )
     )
+
+    block = geo_model.solutions.octrees_output[0].last_output_center.final_block
+    sp_coords_tensor = geo_model.foo.surface_points.sp_coords
+    import torch
+    jacobian = torch.zeros((
+        sp_coords_tensor.shape[0],
+        sp_coords_tensor.shape[1],
+        block.shape[0])
+    )
+    for e, element in enumerate(block):
+        element.backward(retain_graph=True)
+        jacobian[:, :, e] = sp_coords_tensor.grad
     
-    geo_model.solutions.octrees_output[0].last_output_center.final_block.sum().backward()
-    
-    print("Gradients:", geo_model.foo.surface_points.sp_coords.grad)
+    print("Gradients:", jacobian)
     
     gpv.plot_2d(geo_model, show_topography=False, legend=False, show=True)
