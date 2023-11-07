@@ -17,6 +17,7 @@ def test_gradients_I():
     )
     
     geo_model.interpolation_options.mesh_extraction = False
+    geo_model.interpolation_options.sigmoid_slope = 2000
     gp.compute_model(
         gempy_model=geo_model,
         engine_config=gp.data.GemPyEngineConfig(
@@ -26,6 +27,6 @@ def test_gradients_I():
     
     geo_model.solutions.octrees_output[0].last_output_center.final_block.sum().backward()
     
-    print("Gradients:", geo_model.interpolation_input.surface_points.sp_coords.grad)
+    print("Gradients:", geo_model.foo.surface_points.sp_coords.grad)
     
     gpv.plot_2d(geo_model, show_topography=False, legend=False, show=True)
