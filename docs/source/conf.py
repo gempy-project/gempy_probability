@@ -136,10 +136,10 @@ linkcheck_timeout = 500
 sphinx_gallery_conf = {
     # path to your examples scripts
     "examples_dirs"          : [
-        "../../examples/intro",
-        "../../examples/first_example_of_inference",
-        "../../examples/basic_geology",
-        "../../examples/probabilistic_inversion",
+        "../../examples/0-intro",
+        "../../examples/1-first_example_of_inference",
+        "../../examples/2-basic_geology",
+        "../../examples/3-probabilistic_inversion",
         "../../examples/utils",
     ],
     # path where to save gallery generated examples
