@@ -11,7 +11,7 @@ def test_gradients_I():
     geo_model: gp.data.GeoModel = gp.create_geomodel(
         project_name='Wells',
         extent=[0, 12000, -500, 500, 0, 4000],
-        resolution=[20, 2, 20],
+        resolution=[20, 2, 10],
         refinement=1,  # * For this model is better not to use octrees because we want to see what is happening in the scalar fields
         importer_helper=gp.data.ImporterHelper(
             path_to_orientations=data_path + "/data/2-layers/2-layers_orientations.csv",
@@ -46,11 +46,13 @@ def test_gradients_I():
     for e, element in enumerate(block):
         element.backward(retain_graph=True)
         jacobian[:, :, e] = sp_coords_tensor.grad
+        # jacobian[:, e] = sp_coords_tensor.grad[:, 2]
 
     print("Gradients:", jacobian)
 
     for i in range(4):
-        gradient_z_sp_1 = jacobian[i, 0, :].detach().numpy()
+        gradient_z_sp_1 = jacobian[i, 2, :].detach().numpy()
+        # gradient_z_sp_1 = jacobian[i, :].detach().numpy()
         gpv.plot_2d(
             geo_model,
             show_topography=False,
@@ -59,5 +61,6 @@ def test_gradients_I():
             override_regular_grid=gradient_z_sp_1,
             kwargs_lithology={
                 'cmap': 'viridis',
+                "plot_grid": True
             }
         )
