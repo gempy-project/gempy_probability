@@ -37,14 +37,15 @@ def test_gradients_numpy():
     gpv.plot_2d(geo_model, kwargs_lithology={"plot_grid": True})
 
     par_val = geo_model.surface_points.data['Z'][0]
-    var = 500
+    var = 50
+    point_n = 1
 
     values_to_compute = np.linspace(par_val - var, par_val + var, 30)
     arrays = np.array([])
     for i, val in enumerate(values_to_compute):
         gp.modify_surface_points(
             geo_model,
-            slice=0,
+            slice=point_n,
             Z=val
         )
         sol = gp.compute_model(geo_model)
@@ -58,7 +59,6 @@ def test_gradients_numpy():
 
     for i in range(10):
         for j in range(10):
-            # print(i,j, (9-j)*10+i+1)
             ax = plt.subplot(10, 10, (9 - j) * 10 + i + 1)  # ((1+j)*10)-i)
             ax.plot(values_to_compute, iter_a[:, i, j], '.')
             ax.axvline(par_val, ymax=3, color='r')
@@ -74,28 +74,34 @@ def test_gradients_numpy():
 
     gp.modify_surface_points(
         geo_model,
-        slice=0,
+        slice=point_n,
         Z=par_val
     )
     gp.compute_model(geo_model)
-    gradient_z_sp_1 = grads[4]
-    gpv.plot_2d(
+    gradient_z_sp_1 = grads[15]
+
+    max_abs_val = np.max(np.abs(gradient_z_sp_1))
+    p = gpv.plot_2d(
         geo_model,
         show_topography=False,
         legend=True,
         show=True,
         override_regular_grid=gradient_z_sp_1,
         kwargs_lithology={
-            'cmap': 'viridis',
-            "plot_grid": True
+            'cmap': 'seismic',
+            "plot_grid": True,
+            "vmin": -max_abs_val,
+            "vmax": max_abs_val
         }
     )
+
 
 
 def test_gradients_I():
     geo_model = model()
 
     block = geo_model.solutions.octrees_output[0].last_output_center.final_block
+
     sp_coords_tensor = geo_model.taped_interpolation_input.surface_points.sp_coords
 
     import torch
@@ -109,21 +115,28 @@ def test_gradients_I():
         sp_coords_tensor.register_hook(lambda x: print("I am here!", x))
 
     for e, element in enumerate(block):
-        element.backward(retain_graph=True)
+        if sp_coords_tensor.grad is not None:
+            sp_coords_tensor.grad.zero_()
+        element.backward(retain_graph=True, create_graph=True)
         jacobian[:, :, e] = sp_coords_tensor.grad
 
     print("Gradients:", jacobian)
 
-    for i in range(1):
+    for i in range(1, 2):
         gradient_z_sp_1 = jacobian[i, 2, :].detach().numpy()
-        gpv.plot_2d(
+
+        max_abs_val = np.max(np.abs(gradient_z_sp_1))
+        p = gpv.plot_2d(
             geo_model,
             show_topography=False,
             legend=True,
             show=True,
             override_regular_grid=gradient_z_sp_1,
             kwargs_lithology={
-                'cmap': 'viridis',
-                "plot_grid": True
+                'cmap': 'seismic',
+                "plot_grid": True,
+                "vmin": -max_abs_val,
+                "vmax": max_abs_val
             }
         )
+        
