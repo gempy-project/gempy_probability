@@ -4,6 +4,9 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
+from gempy_engine.core.backend_tensor import BackendTensor
+import gempy_engine
+
 # %%
 data_path = os.path.abspath('../')
 
@@ -39,6 +42,20 @@ geo_model: gp.data.GeoModel = gp.create_geomodel(
     )
 )
 
+geo_model.interpolation_options.uni_degree = 0
+geo_model.interpolation_options.mesh_extraction = False
+geo_model.interpolation_options.sigmoid_slope = 1000.
+
+x_loc = 6000
+y_loc = 0
+z_loc = np.linspace(0, 4000, 100)
+xyz_coord = np.array([[x_loc, y_loc, z] for z in z_loc])
+
+gp.set_custom_grid(
+    geo_model.grid,
+    xyz_coord=xyz_coord
+)
+
 # %%
 # Input setting
 plot_geo_setting_well(geo_model=geo_model)
@@ -49,4 +66,72 @@ gp.compute_model(geo_model)
 plot_geo_setting_well(geo_model=geo_model)
 
 # %%
+import pyro
+import pyro.distributions as dist
+import torch
+from pyro.infer import MCMC, NUTS, Predictive
 
+from gempy_probability.plot_posterior import PlotPosterior, default_red, default_blue
+
+coords = torch.as_tensor(geo_model.interpolation_input.surface_points.sp_coords.copy())
+
+
+def model(y_obs_list):
+    # Pyro models use the 'sample' function to define random variables
+    mu_top = pyro.sample(r'$\mu_{top}$', dist.Normal(3000.05, 200).expand([2]))
+    sigma_top = pyro.sample(r"$\sigma_{top}$", dist.Gamma(0.3, 3.0))
+    # y_top = pyro.sample(r"y_{top}", dist.Normal(mu_top, sigma_top), obs=torch.tensor([3.02]))
+
+    mu_bottom = pyro.sample(r'$\mu_{bottom}$', dist.Normal(1000, 0.2).expand([2]))
+    sigma_bottom = pyro.sample(r'$\sigma_{bottom}$', dist.Gamma(0.3, 3.0))
+    # y_bottom = pyro.sample(r'y_{bottom}', dist.Normal(mu_bottom, sigma_bottom), obs=torch.tensor([1.02]))
+
+    BackendTensor.change_backend_gempy(
+        engine_backend=gp.data.AvailableBackends.PYTORCH,
+    )
+
+    # TODO: To decide what to do with this.
+    interpolation_input = geo_model.interpolation_input
+    geo_model.taped_interpolation_input = interpolation_input
+
+    # original_surface_points = interpolation_input.surface_points.sp_coords.detach().clone()
+    coords[0:2, 2] = mu_top / geo_model.transform.isometric_scale
+    coords[2:, 2] = mu_bottom / geo_model.transform.isometric_scale
+    interpolation_input.surface_points.sp_coords = coords
+
+    geo_model.solutions = gempy_engine.compute_model(
+        interpolation_input=interpolation_input,
+        options=geo_model.interpolation_options,
+        data_descriptor=geo_model.input_data_descriptor,
+        geophysics_input=geo_model.geophysics_input,
+    )
+
+    gpv.plot_2d(geo_model)
+
+    simulated_well = geo_model.solutions.octrees_output[0].last_output_center.custom_grid_values
+
+    # Count how many values are between 1.5 an 2.5 in simulated_well
+    n_values = torch.sum((simulated_well > 1.5) & (simulated_well < 2.5), axis=0)
+    thickness = torch.tensor(n_values * 40)
+
+    mu_thickness = pyro.deterministic(r'$\mu_{thickness}$', thickness)  # Deterministic transformation
+    sigma_thickness = pyro.sample(r'$\sigma_{thickness}$', dist.Gamma(0.3, 3.0))
+    y_thickness = pyro.sample(r'y_{thickness}', dist.Normal(mu_thickness, sigma_thickness), obs=y_obs_list)
+
+
+y_obs_list = torch.tensor([2.12, 2.06, 2.08, 2.05, 2.08, 2.09,
+                           2.19, 2.07, 2.16, 2.11, 2.13, 1.92])
+
+# 1. Prior Sampling
+prior = Predictive(model, num_samples=3)(y_obs_list)
+
+
+# Now you can run MCMC using NUTS to sample from the posterior
+if True:
+    nuts_kernel = NUTS(model)
+    mcmc = MCMC(nuts_kernel, num_samples=100, warmup_steps=20)
+    mcmc.run(y_obs_list)
+
+    # 3. Sample from Posterior Predictive
+    posterior_samples = mcmc.get_samples()
+    pass
