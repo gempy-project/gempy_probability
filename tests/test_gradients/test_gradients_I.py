@@ -100,7 +100,12 @@ def test_gradients_numpy():
 def test_gradients_I():
     geo_model = model()
 
+
+    # * This is the activated block
     block = geo_model.solutions.octrees_output[0].last_output_center.final_block
+
+    # * This is the scalar field
+    # block = geo_model.solutions.octrees_output[0].last_output_center.exported_fields.scalar_field
 
     sp_coords_tensor = geo_model.taped_interpolation_input.surface_points.sp_coords
 
@@ -124,7 +129,7 @@ def test_gradients_I():
 
     for i in range(1, 2):
         gradient_z_sp_1 = jacobian[i, 2, :].detach().numpy()
-
+        
         max_abs_val = np.max(np.abs(gradient_z_sp_1))
         p = gpv.plot_2d(
             geo_model,
@@ -139,4 +144,37 @@ def test_gradients_I():
                 "vmax": max_abs_val
             }
         )
-        
+
+
+import torch
+import torch.nn.functional as F
+
+
+def test_smooth_step_activation():
+    def smooth_step_activation(x, lower_bound=5, upper_bound=10):
+        # This scale can be adjusted to make the transition sharper or smoother
+        scale = torch.tensor(10.0)  # A higher scale will make the transition sharper
+
+        # Smooth approximation of Heaviside step function
+        step_lower = F.sigmoid(scale * (x - lower_bound))
+        step_upper = F.sigmoid(scale * (-x + upper_bound))
+
+        # The model is activated (returns x) when x is between lower_bound and upper_bound
+        # and is deactivated (returns 0) otherwise.
+        # return x * step_lower * step_upper
+        return x  * step_lower
+
+
+    # Dummy data
+    x = torch.linspace(0, 15, 100)
+
+    # Apply the smooth step activation
+    y = smooth_step_activation(x)
+
+    # Plot the result if you are in an environment that supports plotting
+    import matplotlib.pyplot as plt
+
+    plt.plot(x.numpy(), y.numpy())
+    plt.xlabel('x')
+    plt.ylabel('Activated Output')
+    plt.show()
