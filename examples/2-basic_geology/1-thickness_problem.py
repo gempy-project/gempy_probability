@@ -12,6 +12,7 @@ import pyro
 import pyro.distributions as dist
 import torch
 from pyro.infer import MCMC, NUTS, Predictive
+from pyro.infer.inspect import get_dependencies
 
 from gempy_probability.plot_posterior import PlotPosterior, default_red, default_blue
 
@@ -55,7 +56,7 @@ y_obs_list = torch.tensor([2.12, 2.06, 2.08, 2.05, 2.08, 2.09,
 pyro.set_rng_seed(4003)
 
 
-def model(y_obs_list):
+def model(y_obs_list_):
     # Pyro models use the 'sample' function to define random variables
     mu_top = pyro.sample(r'$\mu_{top}$', dist.Normal(3.05, 0.2))
     sigma_top = pyro.sample(r"$\sigma_{top}$", dist.Gamma(0.3, 3.0))
@@ -67,8 +68,13 @@ def model(y_obs_list):
 
     mu_thickness = pyro.deterministic(r'$\mu_{thickness}$', mu_top - mu_bottom)  # Deterministic transformation
     sigma_thickness = pyro.sample(r'$\sigma_{thickness}$', dist.Gamma(0.3, 3.0))
-    y_thickness = pyro.sample(r'y_{thickness}', dist.Normal(mu_thickness, sigma_thickness), obs=y_obs_list)
+    y_thickness = pyro.sample(r'y_{thickness}', dist.Normal(mu_thickness, sigma_thickness), obs=y_obs_list_)
 
+
+dependencies = get_dependencies(
+    model,
+    model_args=y_obs_list[:1]
+)
 
 # 1. Prior Sampling
 prior = Predictive(model, num_samples=10)(y_obs_list)
