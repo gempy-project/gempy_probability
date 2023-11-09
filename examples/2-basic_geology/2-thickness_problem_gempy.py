@@ -78,8 +78,13 @@ from pyro.infer import MCMC, NUTS, Predictive, HMC
 
 from gempy_probability.plot_posterior import PlotPosterior, default_red, default_blue
 
-coords = torch.as_tensor(geo_model.interpolation_input.surface_points.sp_coords.copy())
-val = geo_model.interpolation_input.surface_points.sp_coords[0, 2]
+sp_coords_copy = geo_model.interpolation_input.surface_points.sp_coords.copy()
+coords = torch.as_tensor(sp_coords_copy[1:, :])
+val = torch.as_tensor(sp_coords_copy[0, :2])
+
+
+
+# val = geo_model.interpolation_input.surface_points.sp_coords[0, 2]
 
 BackendTensor.change_backend_gempy(
     engine_backend=gp.data.AvailableBackends.PYTORCH,
@@ -88,7 +93,8 @@ BackendTensor.change_backend_gempy(
 
 def model(y_obs_list):
     # Pyro models use the 'sample' function to define random variables
-    mu_top = pyro.sample(r'$\mu_{top}$', dist.Normal(coords, 0.2))
+    prioir_mean = sp_coords_copy[0, 2]
+    mu_top = pyro.sample(r'$\mu_{top}$', dist.Normal(prioir_mean, 0.02))
 
     # sample = 0.0487 + (mu_top + geo_model.transform.position[2]) / geo_model.transform.isometric_scale
     if False:
@@ -100,7 +106,10 @@ def model(y_obs_list):
         #      torch.tensor([[0, 0, sample]]))
         # )
 
-        interpolation_input.surface_points.sp_coords = mu_top
+        
+        params = torch.concat((val.view(2,1), mu_top.view(1,1)))
+        combined = torch.concat((params.view(1,3), coords,), dim=0).view(4,3)
+        interpolation_input.surface_points.sp_coords = combined
         # thickness = interpolation_input.surface_points.sp_coords.sum()
 
         geo_model.solutions = gempy_engine.compute_model(
@@ -157,8 +166,6 @@ def model(y_obs_list):
     #     geophysics_input=geo_model.geophysics_input,
     # )
     # 
-    # if False:
-    #     gpv.plot_2d(geo_model)
     # 
     # simulated_well = geo_model.solutions.octrees_output[0].last_output_center.custom_grid_values
     # thickness = simulated_well.sum()
@@ -177,9 +184,9 @@ def model(y_obs_list):
 
 y_obs_list = torch.tensor([
     # 2.12, 2.06, 2.08, 2.05, 2.08, 2.09, 2.19, 2.07, 2.16, 2.11, 2.13,
-    200])
+    200, 210, 190])
 
-a = get_dependencies(model, (y_obs_list))
+a = get_dependencies(model, (y_obs_list[:1]))
 import pprint
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -200,9 +207,9 @@ if True:
     pyro.primitives.enable_validation(is_validate=True)
     # # Set up the NUTS sampler
     nuts_kernel = NUTS(model,
-                       step_size=0.085,  # Example of custom step size
+                       step_size=0.0085,  # Example of custom step size
                        adapt_step_size=True,  # Let NUTS adapt the step size
-                       target_accept_prob=0.4,  # Example of target acceptance rate
+                       target_accept_prob=0.9,  # Example of target acceptance rate
                        max_tree_depth=10,
                        init_strategy=init_to_mean,
                        )  # Example of maximum tree depth
