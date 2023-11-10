@@ -32,10 +32,14 @@ def model(sigoid_slope=100, plot=False):
     if plot:
         gpv.plot_2d(geo_model, show_scalar=False, kwargs_lithology={
             "plot_grid": True,
-            "cmap": "viridis"
         })
         plt.show()
     return geo_model
+
+
+def test_this_model():
+    model(-1, plot=True)
+    
 
 
 def test_gradients_numpy():
