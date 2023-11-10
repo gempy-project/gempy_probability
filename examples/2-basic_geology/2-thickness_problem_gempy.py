@@ -39,7 +39,7 @@ def plot_geo_setting_well(geo_model):
 geo_model: gp.data.GeoModel = gp.create_geomodel(
     project_name='Wells',
     extent=[0, 12000, -500, 500, 0, 4000],
-    refinement=6,  # * For this model is better not to use octrees because we want to see what is happening in the scalar fields
+    refinement=3,  # * For this model is better not to use octrees because we want to see what is happening in the scalar fields
     importer_helper=gp.data.ImporterHelper(
         path_to_orientations=data_path + "/data/2-layers/2-layers_orientations.csv",
         path_to_surface_points=data_path + "/data/2-layers/2-layers_surface_points.csv"
@@ -48,7 +48,7 @@ geo_model: gp.data.GeoModel = gp.create_geomodel(
 
 geo_model.interpolation_options.uni_degree = 0
 geo_model.interpolation_options.mesh_extraction = False
-geo_model.interpolation_options.sigmoid_slope = 1000.
+geo_model.interpolation_options.sigmoid_slope = 1100.
 
 x_loc = 6000
 y_loc = 0
@@ -84,7 +84,6 @@ val = torch.as_tensor(sp_coords_copy[0, :2])
 
 detached_coords = torch.as_tensor(sp_coords_copy)
 
-
 BackendTensor.change_backend_gempy(
     engine_backend=gp.data.AvailableBackends.PYTORCH,
 )
@@ -95,20 +94,13 @@ def model(y_obs_list):
     prioir_mean = sp_coords_copy[0, 2]
     mu_top = pyro.sample(r'$\mu_{top}$', dist.Normal(prioir_mean, torch.tensor(0.02, dtype=torch.float64)))
 
-    interpolation_input = geo_model.interpolation_input # ! If we pull this out the model it breaks. It seems all the graph needs to be in the function!
-    
-    if True:
-        # detached_coords[0, 2] = mu_top # * This gives the error backward through the graph...
-        #interpolation_input.surface_points.sp_coords[0, 2] = mu_top # * This gives the error of a leaf Variable
-        interpolation_input.surface_points.sp_coords = torch.index_put(
-            interpolation_input.surface_points.sp_coords,
-            (torch.tensor([0]), torch.tensor([2])),
-            mu_top
-        )
-    else:
-        params = torch.concat((val.view(2,1), mu_top.view(1,1)))
-        combined = torch.concat((params.view(1,3), coords,), dim=0).view(4,3)
-        interpolation_input.surface_points.sp_coords = combined
+    interpolation_input = geo_model.interpolation_input  # ! If we pull this out the model it breaks. It seems all the graph needs to be in the function!
+
+    interpolation_input.surface_points.sp_coords = torch.index_put(
+        interpolation_input.surface_points.sp_coords,
+        (torch.tensor([0]), torch.tensor([2])),
+        mu_top
+    )
 
     geo_model.solutions = gempy_engine.compute_model(
         interpolation_input=interpolation_input,
@@ -118,15 +110,16 @@ def model(y_obs_list):
     )
 
     simulated_well = geo_model.solutions.octrees_output[0].last_output_center.custom_grid_values
-    thickness = simulated_well.sum()
+    thickness = simulated_well.sum()  # * We would need to segment this better
 
-    mu_thickness = thickness
-    y_thickness = pyro.sample(r'$y_{thickness}$', dist.Normal(mu_thickness, 50), obs=y_obs_list)
+    pyro.deterministic(r'$\mu_{thickness}$', thickness.detach())  # Deterministic transformation
+    y_thickness = pyro.sample(r'$y_{thickness}$', dist.Normal(thickness, 50), obs=y_obs_list)
 
     if False:
         gpv.plot_2d(geo_model)
 
-y_obs_list = torch.tensor([ 200, 210, 190])
+
+y_obs_list = torch.tensor([200, 210, 190])
 
 a = get_dependencies(model, (y_obs_list[:1]))
 import pprint
@@ -136,7 +129,7 @@ pp.pprint(a)
 
 # 1. Prior Sampling
 if True:
-    prior = Predictive(model, num_samples=10)(y_obs_list)
+    prior = Predictive(model, num_samples=50)(y_obs_list)
     data = az.from_pyro(
         prior=prior,
     )
@@ -148,24 +141,43 @@ if True:
 if True:
     pyro.primitives.enable_validation(is_validate=True)
     # # Set up the NUTS sampler
-    nuts_kernel = NUTS(model,
-                       step_size=0.0085,  # Example of custom step size
-                       adapt_step_size=True,  # Let NUTS adapt the step size
-                       target_accept_prob=0.9,  # Example of target acceptance rate
-                       max_tree_depth=10,
-                       init_strategy=init_to_mean,
-                       )  # Example of maximum tree depth
-    
-    mcmc = MCMC(nuts_kernel, num_samples=30, warmup_steps=20, disable_validation=False)
+    nuts_kernel = NUTS(
+        model,
+        step_size=0.0085,  # Example of custom step size
+        adapt_step_size=True,  # Let NUTS adapt the step size
+        target_accept_prob=0.9,  # Example of target acceptance rate
+        max_tree_depth=10,
+        init_strategy=init_to_mean,
+    )  # Example of maximum tree depth
+
+    mcmc = MCMC(nuts_kernel, num_samples=200, warmup_steps=50, disable_validation=False)
 
     mcmc.run(y_obs_list)
 
     # 3. Sample from Posterior Predictive
+
     posterior_samples = mcmc.get_samples()
+    posterior_predictive = Predictive(model, posterior_samples)(y_obs_list)
+
     data = az.from_pyro(
         posterior=mcmc,
-        # prior=prior,
+        prior=prior,
+        posterior_predictive=posterior_predictive
     )
 
     az.plot_trace(data)
+    plt.show()
+    plt.show()
+
+    # %%
+    az.plot_density(
+        data=[data.posterior_predictive, data.prior_predictive],
+        shade=.9,
+        var_names=[
+            r'$\mu_{thickness}$'
+        ],
+        data_labels=["Posterior Predictive", "Prior Predictive"],
+        colors=[default_red, default_blue],
+    )
+
     plt.show()

@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 data_path = os.path.abspath('../../examples/')
 
 
-def model():
+def model(sigoid_slope=100):
     geo_model: gp.data.GeoModel = gp.create_geomodel(
         project_name='Wells',
         extent=[0, 12000, -500, 500, 0, 4000],
@@ -21,7 +21,7 @@ def model():
     )
     geo_model.interpolation_options.uni_degree = 0
     geo_model.interpolation_options.mesh_extraction = False
-    geo_model.interpolation_options.sigmoid_slope = 100.
+    geo_model.interpolation_options.sigmoid_slope = sigoid_slope
     gp.compute_model(
         gempy_model=geo_model,
         engine_config=gp.data.GemPyEngineConfig(
@@ -31,8 +31,14 @@ def model():
     return geo_model
 
 
+def test_model():
+    geo_model=model(200)
+
+    gpv.plot_2d(geo_model, show_scalar=True, kwargs_lithology={"plot_grid": True})
+
+
 def test_gradients_numpy():
-    geo_model = model()
+    geo_model = model(1000)
 
     gpv.plot_2d(geo_model, kwargs_lithology={"plot_grid": True})
 
@@ -78,7 +84,7 @@ def test_gradients_numpy():
         Z=par_val
     )
     gp.compute_model(geo_model)
-    gradient_z_sp_1 = grads[15]
+    gradient_z_sp_1 = grads[15]/(2*var/30)
 
     max_abs_val = np.max(np.abs(gradient_z_sp_1))
     p = gpv.plot_2d(
@@ -98,8 +104,7 @@ def test_gradients_numpy():
 
 
 def test_gradients_I():
-    geo_model = model()
-
+    geo_model = model(sigoid_slope=1200)
 
     # * This is the activated block
     block = geo_model.solutions.octrees_output[0].last_output_center.final_block
@@ -125,7 +130,9 @@ def test_gradients_I():
         element.backward(retain_graph=True, create_graph=True)
         jacobian[:, :, e] = sp_coords_tensor.grad
 
+
     print("Gradients:", jacobian)
+    print("Max min:", jacobian.max(), jacobian.min())
 
     for i in range(1, 2):
         gradient_z_sp_1 = jacobian[i, 2, :].detach().numpy()
@@ -134,7 +141,7 @@ def test_gradients_I():
         p = gpv.plot_2d(
             geo_model,
             show_topography=False,
-            legend=True,
+            legend=False,
             show=True,
             override_regular_grid=gradient_z_sp_1,
             kwargs_lithology={

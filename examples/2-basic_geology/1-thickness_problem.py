@@ -124,7 +124,6 @@ az.plot_density(
     colors=[default_red, default_blue],
 )
 
-# az.plot_density(data)
 plt.show()
 
 # %%
