@@ -1,4 +1,0 @@
-﻿gempy
-torch
-arviz
-pyro-ppl
