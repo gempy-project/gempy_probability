@@ -521,12 +521,12 @@ class PlotPosterior:
 
         obs = data.observed_data[obs] if type(obs) is str else obs
 
-        # data = convert_to_dataset(data, group="posterior")
         coords = {}
-        # var_names = _var_names(var_names, data)
-
         plotters_in_posterior = list(xarray_var_iter(
-            data=get_coords(data, coords),
+            data=get_coords(
+                convert_to_dataset(data, group="posterior"),
+                coords
+           ),
             var_names=var_names,
             combined=True
         ) )
@@ -538,8 +538,8 @@ class PlotPosterior:
 
         plotters = plotters_in_posterior + plotters_in_posterior_predictive
 
-        x = plotters[0][3].flatten()
-        y = plotters[1][3].flatten()
+        x = plotters[0][-1].flatten()
+        y = plotters[1][-1].flatten()
 
         n_data = x.shape[0]
         # This is the special case if n_samples is smaller than the number of bells to plot

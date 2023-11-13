@@ -1,4 +1,4 @@
-﻿"""
+"""
 2.1 - Only Pyro
 ===============
 
@@ -148,7 +148,8 @@ p.create_figure(figsize=(9, 6), joyplot=True)
 iteration = 99
 p.plot_posterior(
     prior_var=['$\\mu_{top}$', '$\\mu_{bottom}$'],
-    like_var=['$\mu_{thickness}$', '$\sigma_{thickness}$'],
+    like_var=['$\\mu_{top}$', '$\\mu_{bottom}$'],
+    # like_var=['$\\mu_{thickness}$', r"y_{top}"],
     obs='y_{thickness}',
     iteration=iteration,
     marginal_kwargs={
