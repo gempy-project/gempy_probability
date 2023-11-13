@@ -1,2 +1,2 @@
-﻿First example of inference
-==========================
+﻿1 - First example of inference
+==============================

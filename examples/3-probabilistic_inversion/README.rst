@@ -1,5 +1,5 @@
-﻿Probabilistic Geophysics
-========================
+﻿3 - Probabilistic Geophysics (WIP)
+==================================
 
 Joint probability
 -----------------
