@@ -1,4 +1,13 @@
+"""
+2.2 - Including GemPy
+=====================
+
+Complex probabilistic model
+---------------------------
+
+"""
 from pyro.infer.autoguide import init_to_mean
+
 from pyro.infer.inspect import get_dependencies
 
 import gempy as gp
