@@ -66,7 +66,12 @@ plot_geo_setting_well(geo_model=geo_model)
 
 # %%
 # Interpolate initial guess
-gp.compute_model(geo_model)
+gp.compute_model(
+    gempy_model=geo_model,
+    engine_config=gp.data.GemPyEngineConfig(
+        backend=gp.data.AvailableBackends.numpy
+    )
+)
 
 plot_geo_setting_well(geo_model=geo_model)
 
