@@ -1,0 +1,15 @@
+
+:orphan:
+
+.. _sphx_glr_examples_basic_geology_sg_execution_times:
+
+
+Computation times
+=================
+**00:26.972** total execution time for **examples_basic_geology** files:
+
++--------------------------------------------------------------------------------------------------------+-----------+--------+
+| :ref:`sphx_glr_examples_basic_geology_2-thickness_problem_gempy.py` (``2-thickness_problem_gempy.py``) | 00:21.673 | 0.0 MB |
++--------------------------------------------------------------------------------------------------------+-----------+--------+
+| :ref:`sphx_glr_examples_basic_geology_1-thickness_problem.py` (``1-thickness_problem.py``)             | 00:05.299 | 0.0 MB |
++--------------------------------------------------------------------------------------------------------+-----------+--------+

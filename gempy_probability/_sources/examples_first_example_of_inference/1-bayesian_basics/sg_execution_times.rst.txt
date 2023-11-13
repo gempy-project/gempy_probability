@@ -1,0 +1,21 @@
+
+:orphan:
+
+.. _sphx_glr_examples_first_example_of_inference_1-bayesian_basics_sg_execution_times:
+
+
+Computation times
+=================
+**00:25.183** total execution time for **examples_first_example_of_inference_1-bayesian_basics** files:
+
++---------------------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
+| :ref:`sphx_glr_examples_first_example_of_inference_1-bayesian_basics_1.2_Intro_to_Bayesian_Inference.py` (``1.2_Intro_to_Bayesian_Inference.py``) | 00:07.510 | 0.0 MB |
++---------------------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
+| :ref:`sphx_glr_examples_first_example_of_inference_1-bayesian_basics_1.3_Intro_to_Bayesian_Inference.py` (``1.3_Intro_to_Bayesian_Inference.py``) | 00:07.028 | 0.0 MB |
++---------------------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
+| :ref:`sphx_glr_examples_first_example_of_inference_1-bayesian_basics_1.1_Intro_to_Bayesian_Inference.py` (``1.1_Intro_to_Bayesian_Inference.py``) | 00:05.847 | 0.0 MB |
++---------------------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
+| :ref:`sphx_glr_examples_first_example_of_inference_1-bayesian_basics_1.4_Intro_to_Bayesian_Inference.py` (``1.4_Intro_to_Bayesian_Inference.py``) | 00:04.798 | 0.0 MB |
++---------------------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
+| :ref:`sphx_glr_examples_first_example_of_inference_1-bayesian_basics__aux_func.py` (``_aux_func.py``)                                             | 00:00.000 | 0.0 MB |
++---------------------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
