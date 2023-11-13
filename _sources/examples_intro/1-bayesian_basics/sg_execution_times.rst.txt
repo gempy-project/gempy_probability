@@ -1,0 +1,13 @@
+
+:orphan:
+
+.. _sphx_glr_examples_intro_1-bayesian_basics_sg_execution_times:
+
+
+Computation times
+=================
+**00:13.375** total execution time for **examples_intro_1-bayesian_basics** files:
+
++--------------------------------------------------------------------------------------------------------------------------+-----------+--------+
+| :ref:`sphx_glr_examples_intro_1-bayesian_basics_1_Intro_to_Bayesian_Inference.py` (``1_Intro_to_Bayesian_Inference.py``) | 00:13.375 | 0.0 MB |
++--------------------------------------------------------------------------------------------------------------------------+-----------+--------+
