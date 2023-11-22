@@ -1,12 +1,10 @@
 ﻿# setup.py for gempy_viewer. Requierements are numpy and matplotlib
 
 from setuptools import setup, find_packages
+import gempy
 
-with open("gempy_probability/__init__.py", "r") as f:
-    for line in f:
-        if line.startswith("__version__"):
-            version = line.split("=")[1].strip().strip("'")
-            break
+version = gempy.__version__
+
 
 
 def read_requirements(file_name):
