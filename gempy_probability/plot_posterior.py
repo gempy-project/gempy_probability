@@ -414,7 +414,7 @@ class PlotPosterior:
         draw_posterior_predictive = data.posterior_predictive[{'chain': 0, 'draw': iteration}]
 
         # TODO: WE are going to have to handle the case of null posterior predictive
-        draw = xarray.merge(( draw_posterior, draw_posterior_predictive ))
+        draw = xarray.merge(( draw_posterior, draw_posterior_predictive ), compat='override')
         
         draw_mu = draw[mean] if type(mean) is str else mean
         draw_sigma = draw[std] if type(std) is str else std
