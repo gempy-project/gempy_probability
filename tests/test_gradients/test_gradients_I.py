@@ -5,7 +5,7 @@ import gempy_viewer as gpv
 import os
 import matplotlib.pyplot as plt
 
-data_path = os.path.abspath('../../examples/')
+data_path = os.path.abspath('../examples/')
 
 
 def model(sigoid_slope=100, plot=False):
@@ -13,7 +13,7 @@ def model(sigoid_slope=100, plot=False):
         project_name='Wells',
         extent=[0, 12000, -500, 500, 0, 4000],
         resolution=np.array([10, 1, 10]) * 1,
-        refinement=1,  # * For this model is better not to use octrees because we want to see what is happening in the scalar fields
+        # refinement=1,  # * For this model is better not to use octrees because we want to see what is happening in the scalar fields
         importer_helper=gp.data.ImporterHelper(
             path_to_orientations=data_path + "/data/2-layers/2-layers_orientations.csv",
             path_to_surface_points=data_path + "/data/2-layers/2-layers_surface_points.csv"
@@ -148,7 +148,7 @@ def test_gradients_I():
             show_topography=False,
             legend=False,
             show=True,
-            override_regular_grid=gradient_z_sp_1,
+            override_regular_grid=gradient_z_sp_1[:100],
             kwargs_lithology={
                 'cmap': 'seismic',
                 "norm": None,
