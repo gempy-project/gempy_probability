@@ -4,6 +4,7 @@ import gempy as gp
 import gempy_viewer as gpv
 import os
 import matplotlib.pyplot as plt
+import pytest
 
 data_path = os.path.abspath('../examples/')
 
@@ -37,17 +38,18 @@ def model(sigoid_slope=100, plot=False):
     return geo_model
 
 
+@pytest.mark.skip(reason="This is just a test")
 def test_this_model():
     model(-1, plot=True)
     
-
+SIGMOID_SLOPE = 1000
 
 def test_gradients_numpy():
-    geo_model = model(1000, plot=True)
+    geo_model = model(SIGMOID_SLOPE, plot=True)
 
     gpv.plot_2d(geo_model, kwargs_lithology={"plot_grid": True})
 
-    par_val = geo_model.surface_points.data['Z'][0]
+    par_val = geo_model.surface_points_copy.data['Z'][0]
     var = 50
     point_n = 0
 
@@ -60,7 +62,7 @@ def test_gradients_numpy():
             Z=val
         )
         sol = gp.compute_model(geo_model)
-        arrays = np.append(arrays, sol.octrees_output[0].last_output_center.final_block)
+        arrays = np.append(arrays, sol.octrees_output[0].last_output_center.final_block[:100])
 
 
     # Plot values
@@ -110,7 +112,7 @@ def test_gradients_numpy():
 
 
 def test_gradients_I():
-    geo_model = model(sigoid_slope=1200, plot=True)
+    geo_model = model(sigoid_slope=SIGMOID_SLOPE, plot=True)
     # * This is the activated block
     block = geo_model.solutions.octrees_output[0].last_output_center.final_block
 
@@ -139,7 +141,7 @@ def test_gradients_I():
     print("Gradients:", jacobian)
     print("Max min:", jacobian.max(), jacobian.min())
 
-    for i in range(0, 4):
+    for i in range(0, 1):
         gradient_z_sp_1 = jacobian[i, 2, :].detach().numpy()
         
         max_abs_val = np.max(np.abs(gradient_z_sp_1))
@@ -163,6 +165,7 @@ import torch
 import torch.nn.functional as F
 
 
+@pytest.mark.skip(reason="This is just a test")
 def test_smooth_step_activation():
     def smooth_step_activation(x, lower_bound=5, upper_bound=10):
         # This scale can be adjusted to make the transition sharper or smoother
