@@ -65,6 +65,12 @@ fault_2_x = torch.tensor(110.)
 # @Miguel: how to adjust for input points as stochastic variables?
 
 
+BackendTensor.change_backend_gempy(
+    engine_backend=gp.data.AvailableBackends.PYTORCH,
+    use_gpu=True,
+    dtype="float32"
+)
+
 def gaussian_kernel(locations, length_scale, variance):
     import torch
     # Compute the squared Euclidean distance between each pair of points
