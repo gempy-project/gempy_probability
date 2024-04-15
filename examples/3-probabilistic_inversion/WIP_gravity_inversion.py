@@ -5,22 +5,7 @@ Based on `GemPy3_Tutorial_XX_fault_gravity.ipynb`
 
 For installation, see the first notebook - here only repeated if running on Google Colab.
 '''
-# %%
-# !pip install gempy --pre
-# %%
-# For 3D plots
-# !sudo apt install libgl1-mesa-glx xvfb
-# !pip install pyvista
 
-import pyvista as pv
-# pv.start_xvfb()
-# %% md
-# GemPy is now separated into different modules to keep the dependencies low. This means that the base version `gempy-engine` is very lean. To enable possibilities to view the created models, we also need to install the `gempy-viewer` module:
-# %%
-# !pip install gempy_viewer
-# %% md
-# With these two modules installed (only required the first time on each system), we can import the modules into the notebook, as usual:
-# %%
 # Importing GemPy and viewer
 import gempy as gp
 import gempy_viewer as gpv
@@ -343,10 +328,11 @@ grav = sol.gravity
 # * These are density values for the geological model
 prior_tensor = densities_tensor  # * This is the prior tensor
 
+# TODO: The covariance is the problem here
 covariance_matrix = gaussian_kernel(  # * This is the likelihood function
     locations=device_location,
-    length_scale=torch.tensor(1_000.0, dtype=torch.float32),
-    variance=torch.tensor(25.0 ** 2, dtype=torch.float32)
+    length_scale=torch.tensor(10, dtype=torch.float32),  # ! These are m!
+    variance=torch.tensor(.5 ** 2, dtype=torch.float32)  # ! These are in property units
 )
 
 # * This is the observed gravity data
@@ -411,7 +397,9 @@ def model(y_obs_list, interpolation_input):
 
 # TODO: This is going to be a problem, that 17 should be number of observations
 n_devices = device_location.values.shape[0]
-y_obs_list = torch.tensor(adapted_observed_grav).view(1, n_devices)
+# y_obs_list = torch.tensor(adapted_observed_grav).view(1, n_devices)
+
+y_obs_list = torch.tensor(adapted_observed_grav)
 
 # Optimize for speed
 interpolation_options.mesh_extraction = False
