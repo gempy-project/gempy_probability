@@ -212,11 +212,9 @@ plt.show()
 ## Plot model and gravity solution
 # %%
 
-blocks = geo_model.solutions.raw_arrays.lith_block.reshape(resolution)
-
 input_data = geo_model.surface_points_copy.df
 fig = plot_model_and_grav(
-    blocks=blocks,
+    blocks=(geo_model.solutions.raw_arrays.lith_block.reshape(resolution)),
     grav=grav.detach().numpy(),
     x_vals=x_vals,
     input_data=input_data
