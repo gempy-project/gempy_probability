@@ -29,6 +29,7 @@ from pyro.infer import MCMC, NUTS, Predictive
 import arviz as az
 from _aux_funcs import plot_model_and_grav
 
+plt.rcParams['text.usetex'] = True
 
 # %% md
 ## Set up Pyro model
@@ -36,7 +37,9 @@ geo_model = gp.generate_example_model(ExampleModel.ONE_FAULT_GRAVITY, compute_mo
 
 
 device_loc = pd.DataFrame()
-x_vals = np.arange(20, 191, 10)
+# x_vals = np.arange(20, 191, 10)
+x_vals = np.linspace(20, 191, 6)
+
 device_loc['X'] = x_vals
 device_loc['Y'] = np.zeros_like(x_vals)
 device_loc['Z'] = 0  # Add a Z-coordinate
@@ -113,7 +116,7 @@ def pyro_model(y_obs_list, interpolation_input):
     # * Prior definition
     prior_mean = 2.62
     mu_density = pyro.sample(
-        name=r'$\mu_{density}$',
+        name=r'$\mu_{\text{density}}$',
         fn=dist.Normal(
             loc=prior_mean,
             scale=torch.tensor(0.5, dtype=torch.float32))
@@ -210,6 +213,7 @@ plt.show()
 # %%
 # Create density plots for posterior and prior distributions
 # These plots provide insights into the parameter distributions and their changes.
+from gempy_probability.plot_posterior import default_red, default_blue
 az.plot_density(
     data=[data, data.prior],
     shade=.9,
@@ -219,12 +223,15 @@ az.plot_density(
 )
 plt.show()
 
+plt.rcParams['text.usetex'] = True
 # %%
 az.plot_density(
     data=[data.posterior_predictive, data.prior_predictive],
     shade=.9,
-    var_names=[r'$\mu_{gravity}$'],
+    var_names=[r'$\mu_{\text{gravity}}$'],
     data_labels=["Posterior Predictive", "Prior Predictive"],
     colors=[default_red, default_blue],
 )
 plt.show()
+
+pass
