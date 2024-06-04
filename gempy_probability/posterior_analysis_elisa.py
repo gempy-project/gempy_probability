@@ -177,7 +177,7 @@ class Posterior():
         else:
             dist = 1
 
-        im = plt.imshow(self.map_ie.reshape(self.topography.dem_zval.shape), extent=self.geo_data.extent[:4],
+        im = plt.imshow(self.map_ie.reshape(self.topography.dem_zval.shape), extent=self.geo_data.orthogonal_extent[:4],
                         cmap='viridis')
         self.add_colorbar(im, pad_fraction=dist)
         plt.title('Cell entropy of geological map')

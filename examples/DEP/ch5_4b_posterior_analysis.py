@@ -180,7 +180,7 @@ imageio.mimsave('./hard1.mov', image_list2, fps=9)
 # 
 
 # %% 
-geo_model.set_regular_grid(geo_model.grid.regular_grid.extent, [40,20,40])
+geo_model.set_regular_grid(geo_model.grid.regular_grid.orthogonal_extent, [40, 20, 40])
 
 # %% 
 geo_model.set_active_grid('regular', reset=True)
