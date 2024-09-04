@@ -86,6 +86,9 @@ def model(y_obs_list_):
 dependencies = get_dependencies(model, model_args=y_obs_list[:1])
 
 # %%
+pyro.render_model(model, model_args=(y_obs_list,))
+
+# %%
 # Prior Sampling
 # --------------
 # Prior sampling is performed to understand the initial distribution of the model parameters
@@ -148,6 +151,8 @@ az.plot_density(
 plt.show()
 
 # %%
+# Can we see a correlation between the posteriors of $\mu_{bottom}$ and $\mu_{top}$?
+#
 # Density Plots of Posterior Predictive and Prior Predictive
 # ----------------------------------------------------------
 # These plots show the distribution of the posterior predictive and prior predictive checks.
