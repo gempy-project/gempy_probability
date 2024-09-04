@@ -82,27 +82,9 @@ pyro.render_model(model, model_args=("normal_distribution", y_obs_list,))
 
 #%% md
 # <a id='3.3'></a>
-# ###  One Observation: (:doc:`ch1_3a_grids`)
-#
-# Before diving in sampling, let's look at a model, where we have a single observation to sample the posterior from a prior with a normal distribution for $\mu$ and a gamma distribution for $\sigma$:
-#
-# MCMC boils down to be a collection of method helping to do bayesian inference, thus based on Bayes Theorem:
-#
-# $$P(\theta | x) = \frac{P(x|\theta) P(\theta)}{P(x)} $$
-#
-# * $P(\theta | x)$ is the Posterior
-# * $P(x)$ is the Prior
-# * $P(x | \theta)$ is the Likelihood
-# * $P(x)$ the evidence
-#
-# As calculating the posterior in this form is most likely not possible in real-world problems. If one could sample from the posterior, one might approximate it with Monte Carlo. But in order to sample directly from the posterior, one would need to invert Bayes Theorem.
-#
-# The solution to this problem is, when we cannot draw MC (in this case Monte Carlo) samples from the distribution directly, we let an MC (now a Markov Chain) do it for us. [1]
-# %% md
-# <a id="3.4"></a>
-# ## What con we do next? Increasing the number of observations - sampling
-# We previously mentioned that we can optimize this model to better fit observations. For this, we generate a prior from the model we previously created, the one with multiple observations from `y_obs_list`.
-# In the following, samples are iteratively drawn and evaluated to form the posterior. This generates what is called a "trace". A predictive Posterior distribution is then generated from said trace.
+# ###  One Observation: (:doc:`1.1_Intro_to_Bayesian_Inference`)
+# ### Several Observations: (:doc:`1.2_Intro_to_Bayesian_Inference`)
+
 # %%
 # License
 # =======
