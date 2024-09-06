@@ -25,6 +25,7 @@ az_data = infer_model(
     distributions_family="uniform_distribution",
     data=y_obs
 )
+
 az.plot_trace(az_data)
 plt.show()
 
@@ -36,7 +37,7 @@ p.create_figure(figsize=(9, 5), joyplot=False, marginal=True, likelihood=True)
 p.plot_marginal(
     var_names=['$\\mu_{likelihood}$', '$\\sigma_{likelihood}$'],
     plot_trace=False,
-    credible_interval=.93,
+    credible_interval=1,
     kind='kde',
     joint_kwargs={'contour': True, 'pcolormesh_kwargs': {}},
     joint_kwargs_prior={'contour': False, 'pcolormesh_kwargs': {}}

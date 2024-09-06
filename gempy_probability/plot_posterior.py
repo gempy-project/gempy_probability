@@ -22,6 +22,8 @@ from arviz.plots.kdeplot import _fast_kde_2d
 from arviz import hdi
 import arviz
 
+
+arviz.style.use("arviz-doc")
 # Seaborn style
 sns.set(style="white", rc={"axes.facecolor": (0, 0, 0, 0)})
 

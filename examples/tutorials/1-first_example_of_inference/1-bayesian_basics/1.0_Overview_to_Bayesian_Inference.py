@@ -76,7 +76,7 @@ def model(distributions_family, data):
     else:
         raise ValueError("distributions_family must be either 'normal_distribution' or 'uniform_distribution'")
     param_concentration = pyro.param('$\\alpha_{prior}$', torch.tensor(0.3), constraint=dist.constraints.positive)
-    param_rate = pyro.param('$\beta_{prior}$', torch.tensor(3), constraint=dist.constraints.positive)
+    param_rate = pyro.param('$\\beta_{prior}$', torch.tensor(3), constraint=dist.constraints.positive)
     
     sigma = pyro.sample('$\\sigma_{likelihood}$', dist.Gamma(param_concentration, param_rate))
     y = pyro.sample('$y$', dist.Normal(mu, sigma), obs=data)
@@ -112,7 +112,6 @@ plt.show()
 # %%
 # Next:
 # =====
-
 # - Several Observations: (:doc:`1.2_Intro_to_Bayesian_Inference`)
 # - One Observation: (:doc:`1.1_Intro_to_Bayesian_Inference`)
 

@@ -157,7 +157,7 @@ data = az.from_pyro(
 )
 
 # Plotting trace of the sampled parameters
-az.plot_trace(data, kind="trace")
+az.plot_trace(data, kind="trace", figsize=(10, 10), compact=False)
 plt.show()
 
 # %%
