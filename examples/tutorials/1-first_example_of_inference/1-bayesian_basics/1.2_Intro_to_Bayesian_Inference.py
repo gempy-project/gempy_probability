@@ -21,6 +21,7 @@ from matplotlib.ticker import StrMethodFormatter
 
 from gempy_probability.plot_posterior import PlotPosterior
 from _aux_func import infer_model
+az.style.use("arviz-doc")
 
 # Sample observations
 y_obs_list = torch.tensor([2.12, 2.06, 2.08, 2.05, 2.08, 2.09,

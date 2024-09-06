@@ -14,6 +14,8 @@ import torch
 from gempy_probability.plot_posterior import PlotPosterior
 from _aux_func import infer_model
 
+az.style.use("arviz-doc")
+
 y_obs = torch.tensor([2.12])
 y_obs_list = torch.tensor([2.12, 2.06, 2.08, 2.05, 2.08, 2.09,
                            2.19, 2.07, 2.16, 2.11, 2.13, 1.92])

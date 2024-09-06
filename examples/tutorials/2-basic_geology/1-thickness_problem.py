@@ -44,6 +44,8 @@ from pyro.infer.inspect import get_dependencies
 from gempy_probability.plot_posterior import PlotPosterior, default_red, default_blue
 import arviz as az
 
+az.style.use("arviz-doc")
+
 # %%
 # Introduction to the Problem
 # ---------------------------
