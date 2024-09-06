@@ -1,10 +1,10 @@
-'''
+"""
 # GemPy 3: gravity inversion for normal fault model
 
 Based on `GemPy3_Tutorial_XX_fault_gravity.ipynb`
 
 For installation, see the first notebook - here only repeated if running on Google Colab.
-'''
+"""
 
 # Importing GemPy and viewer
 import gempy as gp
