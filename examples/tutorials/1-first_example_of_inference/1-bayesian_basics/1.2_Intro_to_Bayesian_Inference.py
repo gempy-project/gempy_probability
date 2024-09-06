@@ -138,6 +138,8 @@ plt.show()
 #  
 #
 # .. image:: /_static/sampling_2.gif
+#    :alt: Animation of the process
+#    :width: 500
 
 # %% 
 # Full Plot
