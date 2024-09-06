@@ -1,6 +1,6 @@
 """
-Normal Prior, several observations
-==================================
+Overview to Bayesian Inference
+============================+=
 
 
 """
@@ -51,12 +51,47 @@ y_obs_list = torch.tensor([2.12, 2.06, 2.08, 2.05, 2.08, 2.09,
 
 # %%
 pyro.render_model(model, model_args=("normal_distribution", y_obs_list,))
+
 # %% md
 # Those observations are used for generating Distributions (~ probabilistic models) in [PyMC3](https://docs.pymc.io/en/v3/) which we encapsulate in the following function:
-# %% md
-# <a id="3.2"></a>
-# ### Simplest probabilistic modeling
+
+
+# %%
+# Simplest probabilistic modeling
+# ==============================+
 #
+# Consider the simplest probabilistic model where the output $y$ of a model is a distribution. 
+# Let's assume, $y$ is a normal distribution, described by a mean $\mu$ and a standard deviation $\sigma$. 
+# Usually, those are considered scalar values, but they themselves can be distributions. 
+# This will yield a change of the width and position of the normal distribution $y$ with each iteration.
+#
+# As a reminder, a normal distribution is defined as:
+#
+# $$
+# y = \frac{1}{\sigma \sqrt{2\pi}} \, e^{-\frac{(x - \mu)^2}{2 \sigma ^2}}
+# $$
+#
+# * $\mu$: mean (Normal distribution)
+# * $\sigma$: standard deviation (Gamma distribution, Gamma log-likelihood)
+# * $y$: Normal distribution
+#
+# With this constructed model, we are able to infer which model parameters will fit observations better by _optimizing_ for regions with high density mass. 
+# In addition (or even substituting) to data observations, informative values like prior simulations or expert knowledge 
+# can pour into the construction of the first $y$ distribution, the _prior_.
+#
+# There isn't a limitation about how "informative" a prior can or must be. Depending on the variance of the model's parameters 
+# and on the number of observations, a model will be more _prior driven_ or _data driven_.
+# 
+# Let's set up a `pymc3` model using the `thickness_observation` from above as observations and with $\mu$ and $\sigma$ being:
+#
+# * $\mu = \text{Normal distribution with mean } 2.08 \text{ and standard deviation } 0.07$
+# * $\sigma = \text{Gamma distribution with } \alpha = 0.3 \text{ and } \beta = 3$
+# * $y = \text{Normal distribution with } \mu, \sigma \text{ and } \text{thickness_observation_list} \text{ as observations}$
+#
+
+# %% md
+# Simplest probabilistic modeling
+# """""""""""""""""""""""""""""""
 # Consider the simplest probabilistic model where the output $y$ of a model is a distribution. Let's assume, $y$ is a normal distribution, described by a mean $\mu$ and a standard deviation $\sigma$. Usually, those are considered scalar values, but they themselves can be distributions. This will yield a change of the width and position of the normal distribution $y$ with each iteration.
 #
 # As a reminder, a normal distribution is defined as:
@@ -70,21 +105,19 @@ pyro.render_model(model, model_args=("normal_distribution", y_obs_list,))
 # With this constructed model, we are able to infer which model parameters will fit observations better by _optimizing_ for regions with high density mass. In addition (or even substituting) to data observations, informative values like prior simulations or expert knowledge can pour into the construction of the first $y$ distribution, the _prior_.
 #
 # There isn't a limitation about how "informative" a prior can or must be. Depending on the variance of the model's parameters and on the number of observations, a model will be more _prior driven_ or _data driven_.
-# %% md
 # Let's set up a `pymc3` model using the `thickness_observation` from above as observations and with $\mu$ and $\sigma$ being:
+#
 # * $\mu$ = Normal distribution with mean 2.08 and standard deviation 0.07
 # * $\sigma$ = Gamma distribution with $\alpha$ (shape parameter) 0.3 and $\beta$ (rate parameter) 3
 # * $y$ = Normal distribution with $\mu$, $\sigma$ and `thickness_observation_list` as observations
 #
 # A [Gamma distribution](https://docs.pymc.io/en/latest/api/distributions/generated/pymc.Gamma.html) can also be expressed by mean and standard deviation with $\alpha = \frac{\mu^2}{\sigma^2}$ and $\beta = \frac{\mu}{\sigma^2}$
 #
-
-
-#%% md
-# <a id='3.3'></a>
-# ###  One Observation: (:doc:`1.1_Intro_to_Bayesian_Inference`)
-# ### Several Observations: (:doc:`1.2_Intro_to_Bayesian_Inference`)
-
+#
+#
+#  - One Observation: (:doc:`1.1_Intro_to_Bayesian_Inference`)
+#  - Several Observations: (:doc:`1.2_Intro_to_Bayesian_Inference`)
+#
 # %%
 # License
 # =======

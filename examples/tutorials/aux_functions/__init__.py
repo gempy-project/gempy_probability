@@ -1,4 +1,4 @@
-import gempy_legacy as gp
+import gempy as gp
 import numpy as np
 import matplotlib.pyplot as plt
 

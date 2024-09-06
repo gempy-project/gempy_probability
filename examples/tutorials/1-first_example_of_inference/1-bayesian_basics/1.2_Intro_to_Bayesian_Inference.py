@@ -15,7 +15,8 @@ import torch
 from matplotlib.ticker import StrMethodFormatter
 
 from gempy_probability.plot_posterior import PlotPosterior
-from examples.tutorials._aux_functions.aux_func_bayesian_basics import infer_model
+
+from _aux_func import infer_model
 
 y_obs = torch.tensor([2.12])
 y_obs_list = torch.tensor([2.12, 2.06, 2.08, 2.05, 2.08, 2.09,
@@ -30,7 +31,7 @@ az_data = infer_model(
 az.plot_trace(az_data)
 plt.show()
 
-#%% md
+# %% md
 #
 # #### Raw observations:
 # The behaviour of this chain is controlled by the observations we fed into the model. Let's have a look again at the observations and how they are spread/distributed:
@@ -44,7 +45,7 @@ for tick in p.likelihood_axes.get_xticklabels():
     tick.set_rotation(45)
 plt.show()
 
-#%% md
+# %% md
 # The bulk of observations is between 2.05 and 2.15, one observation at the lower end with 1.92.
 # #### Final inference
 #
@@ -59,7 +60,7 @@ for tick in p.likelihood_axes.get_xticklabels():
     tick.set_rotation(45)
 plt.show()
 
-#%% md
+# %% md
 # The bell-peak is above a cluster of observations, but the one observation at 1.92 seems to be of greater importance, as otherwise, the highest likelihood might be located more around 2.1.
 # ### Joyplot
 #
@@ -70,7 +71,7 @@ p = PlotPosterior(az_data)
 p.create_figure(figsize=(9, 9), joyplot=True, marginal=False, likelihood=False, n_samples=31)
 p.plot_joy(('$\mu$', '$\sigma$'), '$y$', iteration=14)
 plt.show()
-#%% md
+# %% md
 # Below we show a gif of how the curve actually moves ($\mu$ is changed) and changes its width (change in $\sigma$ parameters) with progressive sampling. Dark colors represent an increase in likeliness. However, we see that the colors change with new iterations. That means, that what previously seemed likely becomes less likely as we keep exploring the probability space.
 # <hr>
 #
@@ -94,17 +95,17 @@ p.plot_normal_likelihood('$\mu$', '$\sigma$', '$y$', iteration=-1, hide_lines=Tr
 p.likelihood_axes.set_xlim(1.70, 2.40)
 
 plt.show()
-#%% md
+# %% md
 # The small gif below shows the first 100 samplings (starting from the 10th iteration) of the chain:
-#%% md
+# %% md
 # <hr>
 #
 # ![sampling](images/sampling_2.gif "segment")
 #
 # <hr>
-#%% md
+# %% md
 # A sped-up version of the full sampling (each 10 steps until we reach the 1000th iteration) provides an impression how we arrive at the posterior distribution...and that the change after the first couple of iterations gets smaller and smaller, as the chain itself gets more and more "educated" about its guesses:
-#%% md
+# %% md
 # <hr>
 #
 # ![sampling](images/sampling.gif "segment")

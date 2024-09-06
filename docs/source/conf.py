@@ -49,6 +49,7 @@ sys.path.insert(0, os.path.abspath('.'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+        'myst_parser',  # MyST markdown parser
         'sphinx.ext.autodoc',
         'sphinx.ext.autosummary',
         'sphinx.ext.doctest',
@@ -149,7 +150,7 @@ sphinx_gallery_conf = {
                 "examples_utils",
         ],
 
-        'ignore_pattern': r'__init__\.py',
+        'ignore_pattern': r'__init__\.py|._aux_func.py',
         "filename_pattern"       : r"\.py",
         "download_all_examples"  : False,  # Remove the "Download all examples" button from the top level gallery
         "within_subsection_order": FileNameSortKey,  # Sort gallery example by file name instead of number of lines (default)

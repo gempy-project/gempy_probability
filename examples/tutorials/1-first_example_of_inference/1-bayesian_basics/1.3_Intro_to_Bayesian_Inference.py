@@ -11,7 +11,8 @@ import pyro
 import torch
 
 from gempy_probability.plot_posterior import PlotPosterior
-from examples.tutorials._aux_functions.aux_func_bayesian_basics import infer_model
+
+from _aux_func import infer_model
 
 y_obs = torch.tensor([2.12])
 y_obs_list = torch.tensor([2.12, 2.06, 2.08, 2.05, 2.08, 2.09,
