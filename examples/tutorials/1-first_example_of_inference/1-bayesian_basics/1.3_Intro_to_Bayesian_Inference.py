@@ -33,13 +33,22 @@ plt.show()
 p = PlotPosterior(az_data)
 
 p.create_figure(figsize=(9, 5), joyplot=False, marginal=True, likelihood=True)
-p.plot_marginal(var_names=['$\mu$', '$\sigma$'],
-                plot_trace=False, credible_interval=.93, kind='kde',
-                joint_kwargs={'contour': True, 'pcolormesh_kwargs': {}},
-                joint_kwargs_prior={'contour': False, 'pcolormesh_kwargs': {}})
-
+p.plot_marginal(
+    var_names=['$\\mu_{likelihood}$', '$\\sigma_{likelihood}$'],
+    plot_trace=False,
+    credible_interval=.93,
+    kind='kde',
+    joint_kwargs={'contour': True, 'pcolormesh_kwargs': {}},
+    joint_kwargs_prior={'contour': False, 'pcolormesh_kwargs': {}}
+)
 p.axjoin.set_xlim(1.96, 2.22)
-p.plot_normal_likelihood('$\mu$', '$\sigma$', '$y$', iteration=-6, hide_lines=True)
+p.plot_normal_likelihood(
+    mean='$\mu_{likelihood}$',
+    std='$\sigma_{likelihood}$',
+    obs='$y$',
+    iteration=-6,
+    hide_lines=True
+)
 p.likelihood_axes.set_xlim(1.70, 2.40)
 plt.show()
 

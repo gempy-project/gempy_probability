@@ -23,13 +23,15 @@ def model(distributions_family, data):
         param_std = pyro.param('$\\sigma_{prior}$', torch.tensor(0.07), constraint=dist.constraints.positive)
         mu = pyro.sample('$\\mu_{likelihood}$', dist.Normal(param_mean, param_std))
     elif distributions_family in "uniform_distribution":
-        param_low = pyro.param('$\\mu_{prior}$', torch.tensor(0))
-        param_high = pyro.param('$\\sigma_{prior}$', torch.tensor(10))
-        mu = pyro.sample('$\\mu_{likelihood}$', dist.Uniform(param_low, param_high))
+        param_low = pyro.param('$\\mu_{prior}$', torch.tensor(0.))
+        param_high = pyro.param('$\\sigma_{prior}$', torch.tensor(10.))
+        # mu = pyro.sample('$\\mu_{likelihood}$', dist.Uniform(param_low, param_high))
+
+        mu = pyro.sample('$\mu_{likelihood}$', dist.Uniform(0, 10))
     else:
         raise ValueError("distributions_family must be either 'normal_distribution' or 'uniform_distribution'")
-    param_concentration = pyro.param('$\\alpha_{prior}$', torch.tensor(0.3), constraint=dist.constraints.positive)
-    param_rate = pyro.param('$\beta_{prior}$', torch.tensor(3), constraint=dist.constraints.positive)
+    param_concentration = pyro.param('$\\alpha_{prior}$', torch.tensor(0.3))
+    param_rate = pyro.param('$\beta_{prior}$', torch.tensor(3.))
 
     sigma = pyro.sample('$\\sigma_{likelihood}$', dist.Gamma(param_concentration, param_rate))
     y = pyro.sample('$y$', dist.Normal(mu, sigma), obs=data)

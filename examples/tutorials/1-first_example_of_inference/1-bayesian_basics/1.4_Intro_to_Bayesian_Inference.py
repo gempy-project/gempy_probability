@@ -32,7 +32,13 @@ plt.show()
 # %%
 p = PlotPosterior(az_data)
 p.create_figure(figsize=(9, 3), joyplot=False, marginal=False)
-p.plot_normal_likelihood('$\mu$', '$\sigma$', '$y$', iteration=-1, hide_bell=True)
+p.plot_normal_likelihood(
+    mean='$\\mu_{likelihood}$',
+    std='$\\sigma_{likelihood}$',
+    obs= '$y$',
+    iteration=-1,
+    hide_bell=True
+)
 p.likelihood_axes.set_xlim(1.90, 2.2)
 p.likelihood_axes.xaxis.set_major_formatter(StrMethodFormatter('{x:,.2f}'))
 for tick in p.likelihood_axes.get_xticklabels():
@@ -56,7 +62,13 @@ plt.show()
 # %%
 p = PlotPosterior(az_data)
 p.create_figure(figsize=(9, 3), joyplot=False, marginal=False)
-p.plot_normal_likelihood('$\mu$', '$\sigma$', '$y$', iteration=-1, hide_lines=True)
+p.plot_normal_likelihood(
+    mean='$\\mu_{likelihood}$',
+    std='$\\sigma_{likelihood}$',
+    obs= '$y$',
+    iteration=-1,
+    hide_bell=True
+)
 p.likelihood_axes.set_xlim(1.70, 2.40)
 p.likelihood_axes.xaxis.set_major_formatter(StrMethodFormatter('{x:,.2f}'))
 for tick in p.likelihood_axes.get_xticklabels():
@@ -67,19 +79,34 @@ plt.show()
 p = PlotPosterior(az_data)
 
 p.create_figure(figsize=(9, 9), joyplot=True, marginal=False, likelihood=False, n_samples=31)
-p.plot_joy(('$\mu$', '$\sigma$'), '$y$', iteration=14)
+p.plot_joy(
+    var_names=('$\\mu_{likelihood}$', '$\\sigma_{likelihood}$'),
+    obs='$y$',
+    iteration=14
+)
 plt.show()
 
 # %%
 p = PlotPosterior(az_data)
 
 p.create_figure(figsize=(9, 5), joyplot=False, marginal=True, likelihood=True)
-p.plot_marginal(var_names=['$\mu$', '$\sigma$'],
-                plot_trace=False, credible_interval=.93, kind='kde',
-                joint_kwargs={'contour': True, 'pcolormesh_kwargs': {}},
-                joint_kwargs_prior={'contour': False, 'pcolormesh_kwargs': {}})
+p.plot_marginal(
+    var_names=['$\\mu_{likelihood}$', '$\\sigma_{likelihood}$'],
+    plot_trace=False,
+    credible_interval=.93,
+    kind='kde',
+    joint_kwargs={'contour': True, 'pcolormesh_kwargs': {}},
+    joint_kwargs_prior={'contour': False, 'pcolormesh_kwargs': {}}
+)
 
-p.plot_normal_likelihood('$\mu$', '$\sigma$', '$y$', iteration=-1, hide_lines=True)
+
+p.plot_normal_likelihood(
+    mean='$\\mu_{likelihood}$',
+    std='$\\sigma_{likelihood}$',
+    obs='$y$',
+    iteration=-1,
+    hide_lines=True
+)
 p.likelihood_axes.set_xlim(1.70, 2.40)
 plt.show()
 
