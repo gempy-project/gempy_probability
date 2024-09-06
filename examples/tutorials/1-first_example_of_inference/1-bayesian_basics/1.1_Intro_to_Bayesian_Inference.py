@@ -7,6 +7,7 @@ Normal Prior, single observation
 
 import arviz as az
 import matplotlib.pyplot as plt
+import numpy as np
 import pyro
 import torch
 
@@ -30,6 +31,9 @@ az.plot_trace(az_data)
 plt.show()
 
 # %%
+# Prior Space
+# """"""""""
+# %%
 p = PlotPosterior(az_data)
 
 p.create_figure(figsize=(9, 5), joyplot=False, marginal=True, likelihood=True)
@@ -38,8 +42,15 @@ p.plot_marginal(
     plot_trace=False,
     credible_interval=.93,
     kind='kde',
-    joint_kwargs={'contour': True, 'pcolormesh_kwargs': {}},
-    joint_kwargs_prior={'contour': False, 'pcolormesh_kwargs': {}}
+    group="prior",
+    joint_kwargs={
+            'contour'          : True,
+            'pcolormesh_kwargs': {}
+    },
+    joint_kwargs_prior={
+            'contour': False,
+            'pcolormesh_kwargs': {}
+    }
 )
 
 p.axjoin.set_xlim(1.96, 2.22)
@@ -52,6 +63,48 @@ p.plot_normal_likelihood(
 )
 p.likelihood_axes.set_xlim(1.70, 2.40)
 plt.show()
+
+# %%
+# Prior and Posterior Space
+# """""""""""""""""""""""""
+
+# %%
+def plot_posterior(iteration=-1):
+    p = PlotPosterior(az_data)
+
+    p.create_figure(figsize=(9, 5), joyplot=False, marginal=True, likelihood=True)
+    p.plot_marginal(
+        var_names=['$\\mu_{likelihood}$', '$\\sigma_{likelihood}$'],
+        plot_trace=True,
+        credible_interval=.93,
+        iteration=iteration,
+        kind='kde',
+        group="both",
+        joint_kwargs={
+                'contour'          : True,
+                'pcolormesh_kwargs': {}
+        },
+        joint_kwargs_prior={
+                'contour'          : False,
+                'pcolormesh_kwargs': {}
+        }
+    )
+
+    p.axjoin.set_xlim(1.96, 2.22)
+    p.plot_normal_likelihood(
+        mean='$\\mu_{likelihood}$',
+        std='$\\sigma_{likelihood}$',
+        obs='$y$',
+        iteration=iteration,
+        hide_lines=False
+    )
+    p.likelihood_axes.set_xlim(1.96, 2.22)
+    p.fig.set_label(f'Iteration {iteration}')
+    plt.show()
+
+
+for i in np.linspace(50, 800, 5, dtype=int):
+    plot_posterior(i)
 
 # %%
 # MCMC boils down to be a collection of methods helping to do Bayesian inference, thus based on Bayes Theorem:

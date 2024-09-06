@@ -227,8 +227,17 @@ class PlotPosterior:
             self.axjoin._grid(False)
 
     def plot_trace(self, plotters, iteration, n_iterations=20):
+        
+        
         i_0 = np.max([0, (iteration - n_iterations)])
-
+        # Raise error if there are not enough iterations
+        if plotters[0][3].flatten().shape[0] < n_iterations:
+            raise ValueError(
+                "Number of iterations must be greater than n_iterations."
+            )
+        
+    
+        
         theta1_val_trace = plotters[0][3].flatten()[i_0:iteration + 1]
         theta2_val_trace = plotters[1][3].flatten()[i_0:iteration + 1]
 
@@ -455,12 +464,14 @@ class PlotPosterior:
         y_max = nor_l.max() + nor_l.max() * .05
 
         # This is the bell
-
-        if not 'hide_bell' in kwargs:
+        hide_bell: bool = kwargs.get('hide_bell', False)
+        hide_lines: bool = kwargs.get('hide_lines', False)
+        
+        if not hide_bell:
             self.likelihood_axes.plot(thick_vals, nor_l, color='#7eb1bc', linewidth=.5)
             self.likelihood_axes.fill_between(thick_vals, nor_l, 0, color=color_fill, alpha=.8)
 
-        if not 'hide_bell' in kwargs and not 'hide_lines' in kwargs:
+        if not hide_bell and not hide_lines:
             # This are the lines spawning from the observations
             self.likelihood_axes.vlines(observation, 0.000000000001, likelihood_at_observation, linestyles='dashdot',
                                         color='#DA8886', alpha=.5)

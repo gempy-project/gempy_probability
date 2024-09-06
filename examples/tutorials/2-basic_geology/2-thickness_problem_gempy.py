@@ -29,7 +29,7 @@ from gempy_probability.plot_posterior import default_red, default_blue
 # %%
 # Set the data path
 data_path = os.path.abspath('../')
-
+j
 
 # %%
 # Define a function for plotting geological settings with wells
