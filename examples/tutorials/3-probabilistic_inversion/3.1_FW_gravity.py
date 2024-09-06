@@ -16,10 +16,9 @@ from gempy_engine.core.backend_tensor import BackendTensor
 # Auxiliary libraries
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 import pandas as pd
 
-from _aux_funcs import plot_model_and_grav
+from .._aux_functions.aux_funcs import plot_model_and_grav
 
 # %% md
 ## Step 1: Model setup
