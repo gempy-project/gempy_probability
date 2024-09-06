@@ -29,12 +29,15 @@
 
    .. autosummary::
    
+      ~Solutions.block_solution_resolution
       ~Solutions.debug_input_data
       ~Solutions.gravity
       ~Solutions.magnetics
       ~Solutions.raw_arrays
+      ~Solutions.scalar_field_at_surface_points
       ~Solutions.octrees_output
       ~Solutions.dc_meshes
+      ~Solutions.block_solution_type
    
    
 

@@ -1,6 +1,6 @@
 """
-Normal Prior, single observation
-================================
+Uniform Prior, several observations
+===================================
 
 """
 # sphinx_gallery_thumbnail_number = -1
@@ -12,7 +12,10 @@ import torch
 from matplotlib.ticker import StrMethodFormatter
 
 from gempy_probability.plot_posterior import PlotPosterior
+
 from _aux_func import infer_model
+
+az.style.use("arviz-doc")
 
 y_obs = torch.tensor([2.12])
 y_obs_list = torch.tensor([2.12, 2.06, 2.08, 2.05, 2.08, 2.09,
@@ -22,26 +25,93 @@ pyro.set_rng_seed(4003)
 
 # %%
 az_data = infer_model(
-    distributions_family="normal_distribution",
-    data=y_obs
+    distributions_family="uniform_distribution",
+    data=y_obs_list
 )
 az.plot_trace(az_data)
 plt.show()
 
+# %%
+p = PlotPosterior(az_data)
+p.create_figure(figsize=(9, 3), joyplot=False, marginal=False)
+p.plot_normal_likelihood(
+    mean='$\\mu_{likelihood}$',
+    std='$\\sigma_{likelihood}$',
+    obs= '$y$',
+    iteration=-1,
+    hide_bell=True
+)
+p.likelihood_axes.set_xlim(1.90, 2.2)
+p.likelihood_axes.xaxis.set_major_formatter(StrMethodFormatter('{x:,.2f}'))
+for tick in p.likelihood_axes.get_xticklabels():
+    tick.set_rotation(45)
+plt.show()
+
+# %%
+# No matter which probability density function we choose, for real applications we will never find the exact data 
+# generated process---neither we will be able to say if we have found it for that matter---due to an oversimplification 
+# of reality. For most applications, the usual families of probability density functions and transformations of those 
+# are more than enough approximations for the purpose of the model. In Chapter [sec:model_selection], we will delve into 
+# this topic.
+#
+# Once the model is defined we need to infer the set of parameters \( \varTheta \) of the family of density functions 
+# over the observational space, \( \pi_S(y;\varTheta) \). In the case of the normal family, we need to infer the value 
+# of the mean, \( \mu \) and standard deviation \( \sigma \). Up to this point, all the description of the probabilistic 
+# modelling is agnostic in relation to Frequentist or Bayesian views. These two methodologies diverge on how they 
+# infer \( \varTheta \).
+
+
+# %%
+p = PlotPosterior(az_data)
+p.create_figure(figsize=(9, 3), joyplot=False, marginal=False)
+p.plot_normal_likelihood(
+    mean='$\\mu_{likelihood}$',
+    std='$\\sigma_{likelihood}$',
+    obs= '$y$',
+    iteration=-1,
+    hide_bell=True
+)
+p.likelihood_axes.set_xlim(1.70, 2.40)
+p.likelihood_axes.xaxis.set_major_formatter(StrMethodFormatter('{x:,.2f}'))
+for tick in p.likelihood_axes.get_xticklabels():
+    tick.set_rotation(45)
+plt.show()
+
+# %%
+p = PlotPosterior(az_data)
+
+p.create_figure(figsize=(9, 9), joyplot=True, marginal=False, likelihood=False, n_samples=31)
+p.plot_joy(
+    var_names=('$\\mu_{likelihood}$', '$\\sigma_{likelihood}$'),
+    obs='$y$',
+    iteration=14
+)
+plt.show()
 
 # %%
 p = PlotPosterior(az_data)
 
 p.create_figure(figsize=(9, 5), joyplot=False, marginal=True, likelihood=True)
-p.plot_marginal(var_names=['$\mu$', '$\sigma$'],
-                plot_trace=False, credible_interval=.93, kind='kde',
-                joint_kwargs={'contour': True, 'pcolormesh_kwargs': {}},
-                joint_kwargs_prior={'contour': False, 'pcolormesh_kwargs': {}})
+p.plot_marginal(
+    var_names=['$\\mu_{likelihood}$', '$\\sigma_{likelihood}$'],
+    plot_trace=False,
+    credible_interval=1,
+    kind='kde',
+    joint_kwargs={'contour': True, 'pcolormesh_kwargs': {}},
+    joint_kwargs_prior={'contour': False, 'pcolormesh_kwargs': {}}
+)
 
-p.axjoin.set_xlim(1.96, 2.22)
-p.plot_normal_likelihood('$\mu$', '$\sigma$', '$y$', iteration=-6, hide_lines=True)
+
+p.plot_normal_likelihood(
+    mean='$\\mu_{likelihood}$',
+    std='$\\sigma_{likelihood}$',
+    obs='$y$',
+    iteration=-1,
+    hide_lines=True
+)
 p.likelihood_axes.set_xlim(1.70, 2.40)
 plt.show()
+
 
 # %%
 # License

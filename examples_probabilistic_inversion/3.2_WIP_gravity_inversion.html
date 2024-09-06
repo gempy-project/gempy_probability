@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>&lt;no title&gt; &#8212; GemPy 2024.2.0.3.dev0+gf344a731.d20240626 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=270d38c7" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=61a4c737" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <script src="../_static/documentation_options.js?v=bd57e1ea"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="icon" href="../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-probabilistic-inversion-3-2-wip-gravity-inversion-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code</p>
+</div>
+<p class="sphx-glr-example-title" id="sphx-glr-examples-probabilistic-inversion-3-2-wip-gravity-inversion-py"># GemPy 3: gravity inversion for normal fault model</p>
+<p>Based on <cite>GemPy3_Tutorial_XX_fault_gravity.ipynb</cite></p>
+<p>For installation, see the first notebook - here only repeated if running on Google Colab.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Importing GemPy and viewer</span>
+<span class="kn">import</span> <span class="nn">gempy</span> <span class="k">as</span> <span class="nn">gp</span>
+<span class="kn">import</span> <span class="nn">gempy_viewer</span> <span class="k">as</span> <span class="nn">gpv</span>
+<span class="kn">from</span> <span class="nn">gempy.core.data.enumerators</span> <span class="kn">import</span> <span class="n">ExampleModel</span>
+<span class="kn">from</span> <span class="nn">gempy_engine.core.backend_tensor</span> <span class="kn">import</span> <span class="n">BackendTensor</span>
+</pre></div>
+</div>
+<p>And for some additional steps in this notebook:
+%%
+Auxiliary libraries</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib.image</span> <span class="k">as</span> <span class="nn">mpimg</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+</pre></div>
+</div>
+<p>Packages for inversion
+%%</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">pyro</span>
+<span class="kn">import</span> <span class="nn">pyro.distributions</span> <span class="k">as</span> <span class="nn">dist</span>
+<span class="kn">from</span> <span class="nn">pyro.infer</span> <span class="kn">import</span> <span class="n">MCMC</span><span class="p">,</span> <span class="n">NUTS</span><span class="p">,</span> <span class="n">Predictive</span>
+<span class="kn">import</span> <span class="nn">arviz</span> <span class="k">as</span> <span class="nn">az</span>
+<span class="kn">from</span> <span class="nn">_aux_funcs</span> <span class="kn">import</span> <span class="n">plot_model_and_grav</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;text.usetex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+</div>
+<p># Set up Pyro model</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="../Modeling Classes/gempy.core.data.GeoModel.html#gempy.core.data.GeoModel" title="gempy.core.data.GeoModel" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span></a> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">generate_example_model</span><span class="p">(</span><span class="n">ExampleModel</span><span class="o">.</span><span class="n">ONE_FAULT_GRAVITY</span><span class="p">,</span> <span class="n">compute_model</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="n">device_loc</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+<span class="c1"># x_vals = np.arange(20, 191, 10)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">x_vals</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.linspace.html#numpy.linspace" title="numpy.linspace" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">linspace</span></a><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">191</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+
+<span class="n">device_loc</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">]</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">x_vals</span></a>
+<span class="n">device_loc</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.zeros_like.html#numpy.zeros_like" title="numpy.zeros_like" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">x_vals</span></a><span class="p">)</span>
+<span class="n">device_loc</span><span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Add a Z-coordinate</span>
+
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">resolution</span></a> <span class="o">=</span> <a href="../Modeling Classes/gempy.core.data.GeoModel.html#gempy.core.data.GeoModel" title="gempy.core.data.GeoModel" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span></a><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">regular_grid</span><span class="o">.</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">resolution</span></a>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plot_model_and_grav</span><span class="p">(</span>
+    <span class="n">blocks</span><span class="o">=</span><a href="../Modeling Classes/gempy.core.data.GeoModel.html#gempy.core.data.GeoModel" title="gempy.core.data.GeoModel" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span></a><span class="o">.</span><span class="n">solutions</span><span class="o">.</span><span class="n">raw_arrays</span><span class="o">.</span><span class="n">lith_block</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">resolution</span></a><span class="p">),</span>
+    <span class="n">grav</span><span class="o">=</span><a href="../Modeling Classes/gempy.core.data.GeoModel.html#gempy.core.data.GeoModel" title="gempy.core.data.GeoModel" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span></a><span class="o">.</span><span class="n">solutions</span><span class="o">.</span><span class="n">gravity</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span>
+    <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">x_vals</span></a><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">x_vals</span></a><span class="p">,</span>
+    <span class="n">input_data</span><span class="o">=</span><a href="../Modeling Classes/gempy.core.data.GeoModel.html#gempy.core.data.GeoModel.surface_points_copy" title="gempy.core.data.GeoModel.surface_points_copy" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-property"><span class="n">geo_model</span><span class="o">.</span><span class="n">surface_points_copy</span><span class="o">.</span><span class="n">df</span></a>
+<span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Setting Backend To: AvailableBackends.PYTORCH
+/home/leguark/gempy/gempy/core/data/structural_frame.py:206: UserWarning: The basement color was already used in the structural elements.Changing the basement color to #728f02.
+  warnings.warn(f&quot;The basement color was already used in the structural elements.&quot;
+Active grids: GridTypes.NONE|CENTERED|DENSE
+Setting Backend To: AvailableBackends.PYTORCH
+Condition number: 7565.25146484375.
+Condition number: 7753.78857421875.
+Chunking done: 6 chunks
+</pre></div>
+</div>
+<p>Define hyperparameters for the Bayesian geological model
+Use first: lateral position of fault only</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fault_1_x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">80.</span><span class="p">)</span>
+<span class="n">fault_2_x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">110.</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>## Probabilistic model</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># @Miguel: how to adjust for input points as stochastic variables?</span>
+
+
+<span class="n">BackendTensor</span><span class="o">.</span><span class="n">change_backend_gempy</span><span class="p">(</span>
+    <span class="n">engine_backend</span><span class="o">=</span><span class="n">gp</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">AvailableBackends</span><span class="o">.</span><span class="n">PYTORCH</span><span class="p">,</span>
+    <span class="n">use_gpu</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span>
+<span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">gaussian_kernel</span><span class="p">(</span><span class="n">locations</span><span class="p">,</span> <span class="n">length_scale</span><span class="p">,</span> <span class="n">variance</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">torch</span>
+    <span class="c1"># Compute the squared Euclidean distance between each pair of points</span>
+    <span class="n">locations</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">locations</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">distance_squared</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span><span class="n">locations</span><span class="p">,</span> <span class="n">locations</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">2.</span><span class="p">)</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">2.</span><span class="p">)</span>
+    <span class="c1"># Compute the covariance matrix using the Gaussian kernel</span>
+    <span class="n">covariance_matrix</span> <span class="o">=</span> <span class="n">variance</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">distance_squared</span> <span class="o">/</span> <span class="n">length_scale</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">covariance_matrix</span>
+
+
+<span class="c1"># Configure the Pyro model for geological data</span>
+<span class="c1"># * These are density values for the geological model</span>
+<span class="n">densities_tensor</span> <span class="o">=</span> <span class="n">BackendTensor</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">2.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">,</span> <span class="mf">3.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">])</span>
+<span class="n">prior_tensor</span> <span class="o">=</span> <span class="n">densities_tensor</span>  <span class="c1"># * This is the prior tensor</span>
+
+<span class="n">covariance_matrix</span> <span class="o">=</span> <span class="n">gaussian_kernel</span><span class="p">(</span>  <span class="c1"># * This is the likelihood function</span>
+    <span class="n">locations</span><span class="o">=</span><span class="n">device_loc</span><span class="p">,</span>
+    <span class="n">length_scale</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>  <span class="c1"># ! These are m!</span>
+    <span class="n">variance</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">.5</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>  <span class="c1"># ! These are in property units</span>
+<span class="p">)</span>
+
+<span class="c1"># * This is the observed gravity data</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">adapted_observed_grav</span></a> <span class="o">=</span> <a href="../Modeling Classes/gempy.core.data.GeoModel.html#gempy.core.data.GeoModel" title="gempy.core.data.GeoModel" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span></a><span class="o">.</span><span class="n">solutions</span><span class="o">.</span><span class="n">gravity</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+<span class="c1"># Placing the tensor pointer in the rest of the model</span>
+<a href="../Modeling Classes/gempy.core.data.GeoModel.html#gempy.core.data.GeoModel" title="gempy.core.data.GeoModel" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span></a><span class="o">.</span><span class="n">geophysics_input</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">GeophysicsInput</span><span class="p">(</span>
+    <span class="n">tz</span><span class="o">=</span><a href="../Modeling Classes/gempy.core.data.GeoModel.html#gempy.core.data.GeoModel" title="gempy.core.data.GeoModel" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span></a><span class="o">.</span><span class="n">geophysics_input</span><span class="o">.</span><span class="n">tz</span><span class="p">,</span>
+    <span class="n">densities</span><span class="o">=</span><span class="n">prior_tensor</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Setting Backend To: AvailableBackends.PYTORCH
+</pre></div>
+</div>
+<p>Define the Pyro probabilistic model for inversion</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">pyro_model</span><span class="p">(</span><span class="n">y_obs_list</span><span class="p">,</span> <span class="n">interpolation_input</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Pyro model representing the probabilistic aspects of the geological model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">gempy_engine</span>
+
+    <span class="c1"># * Prior definition</span>
+    <span class="n">prior_mean</span> <span class="o">=</span> <span class="mf">2.62</span>
+    <span class="n">mu_density</span> <span class="o">=</span> <span class="n">pyro</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;$\mu_{\text</span><span class="si">{density}</span><span class="s1">}$&#39;</span><span class="p">,</span>
+        <span class="n">fn</span><span class="o">=</span><span class="n">dist</span><span class="o">.</span><span class="n">Normal</span><span class="p">(</span>
+            <span class="n">loc</span><span class="o">=</span><span class="n">prior_mean</span><span class="p">,</span>
+            <span class="n">scale</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Changing the density of the first formation</span>
+    <a href="../Modeling Classes/gempy.core.data.GeoModel.html#gempy.core.data.GeoModel" title="gempy.core.data.GeoModel" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span></a><span class="o">.</span><span class="n">geophysics_input</span><span class="o">.</span><span class="n">densities</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">index_put</span><span class="p">(</span>
+        <span class="nb">input</span><span class="o">=</span><span class="n">prior_tensor</span><span class="p">,</span>
+        <span class="n">indices</span><span class="o">=</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">0</span><span class="p">]),),</span>
+        <span class="n">values</span><span class="o">=</span><span class="n">mu_density</span>
+    <span class="p">)</span>
+
+    <span class="c1"># * Deterministic computation of the geological model</span>
+    <span class="c1"># GemPy does not have API for this yet so we need to compute</span>
+    <span class="c1"># the model directly by calling the engine</span>
+    <a href="../Modeling Classes/gempy.core.data.GeoModel.html#gempy.core.data.GeoModel" title="gempy.core.data.GeoModel" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span></a><span class="o">.</span><span class="n">solutions</span> <span class="o">=</span> <span class="n">gempy_engine</span><span class="o">.</span><span class="n">compute_model</span><span class="p">(</span>
+        <span class="n">interpolation_input</span><span class="o">=</span><span class="n">interpolation_input</span><span class="p">,</span>
+        <span class="n">options</span><span class="o">=</span><a href="../Modeling Classes/gempy.core.data.GeoModel.html#gempy.core.data.GeoModel" title="gempy.core.data.GeoModel" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span></a><span class="o">.</span><span class="n">interpolation_options</span><span class="p">,</span>
+        <span class="n">data_descriptor</span><span class="o">=</span><a href="../Modeling Classes/gempy.core.data.GeoModel.html#gempy.core.data.GeoModel" title="gempy.core.data.GeoModel" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span></a><span class="o">.</span><span class="n">input_data_descriptor</span><span class="p">,</span>
+        <span class="n">geophysics_input</span><span class="o">=</span><a href="../Modeling Classes/gempy.core.data.GeoModel.html#gempy.core.data.GeoModel" title="gempy.core.data.GeoModel" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span></a><span class="o">.</span><span class="n">geophysics_input</span>
+    <span class="p">)</span>
+
+    <span class="n">simulated_geophysics</span> <span class="o">=</span> <a href="../Modeling Classes/gempy.core.data.GeoModel.html#gempy.core.data.GeoModel" title="gempy.core.data.GeoModel" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span></a><span class="o">.</span><span class="n">solutions</span><span class="o">.</span><span class="n">gravity</span>
+    <span class="n">pyro</span><span class="o">.</span><span class="n">deterministic</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\mu_</span><span class="si">{gravity}</span><span class="s1">$&#39;</span><span class="p">,</span> <span class="n">simulated_geophysics</span><span class="p">)</span>
+
+    <span class="c1"># * Likelihood definition</span>
+    <span class="n">pyro</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;obs&quot;</span><span class="p">,</span>
+        <span class="n">fn</span><span class="o">=</span><span class="n">dist</span><span class="o">.</span><span class="n">MultivariateNormal</span><span class="p">(</span><span class="n">simulated_geophysics</span><span class="p">,</span> <span class="n">covariance_matrix</span><span class="p">),</span>
+        <span class="n">obs</span><span class="o">=</span><span class="n">y_obs_list</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<p>Prepare observed data for Pyro model and optimize mesh settings</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># TODO: This is going to be a problem, that 17 should be number of observations</span>
+<span class="n">n_devices</span> <span class="o">=</span> <span class="n">device_loc</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">y_obs_list</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">adapted_observed_grav</span></a><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_devices</span><span class="p">)</span>
+
+<span class="c1"># Optimize for speed</span>
+<a href="../Modeling Classes/gempy.core.data.GeoModel.html#gempy.core.data.GeoModel" title="gempy.core.data.GeoModel" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span></a><span class="o">.</span><span class="n">interpolation_options</span><span class="o">.</span><span class="n">mesh_extraction</span> <span class="o">=</span> <span class="kc">False</span>
+<a href="../Modeling Classes/gempy.core.data.GeoModel.html#gempy.core.data.GeoModel" title="gempy.core.data.GeoModel" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span></a><span class="o">.</span><span class="n">interpolation_options</span><span class="o">.</span><span class="n">number_octree_levels</span> <span class="o">=</span> <span class="mi">1</span>
+
+<a href="../Modeling Classes/gempy.core.data.Grid.html#gempy.core.data.Grid" title="gempy.core.data.Grid" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">set_inactive</span></a><span class="p">(</span><span class="s2">&quot;topography&quot;</span><span class="p">)</span>
+<a href="../Modeling Classes/gempy.core.data.Grid.html#gempy.core.data.Grid" title="gempy.core.data.Grid" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">set_inactive</span></a><span class="p">(</span><span class="s2">&quot;octree&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-pytb notranslate"><div class="highlight"><pre><span></span><span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;/home/leguark/gempy_probability/examples/tutorials/3-probabilistic_inversion/3.2_WIP_gravity_inversion.py&quot;</span>, line <span class="m">164</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><a href="../Modeling Classes/gempy.core.data.Grid.html#gempy.core.data.Grid" title="gempy.core.data.Grid" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">set_inactive</span></a><span class="p">(</span><span class="s2">&quot;topography&quot;</span><span class="p">)</span>
+<span class="gr">AttributeError</span>: <span class="n">&#39;Grid&#39; object has no attribute &#39;set_inactive&#39;</span>
+</pre></div>
+</div>
+<p>Perform prior sampling and visualize the results</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">PRIOR_PREDICTIVE_SAMPLES</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">INFERENCE_SAMPLES</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">POSTERIOR_SAMPLES</span> <span class="o">=</span> <span class="mi">20</span>
+
+
+<span class="k">if</span> <span class="n">PRIOR_PREDICTIVE</span> <span class="o">:=</span> <span class="kc">True</span><span class="p">:</span>
+    <span class="n">predictive_model</span> <span class="o">=</span> <span class="n">Predictive</span><span class="p">(</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">pyro_model</span><span class="p">,</span>
+        <span class="n">num_samples</span><span class="o">=</span><span class="n">PRIOR_PREDICTIVE_SAMPLES</span>
+    <span class="p">)</span>
+    <span class="n">prior</span> <span class="o">=</span> <span class="n">predictive_model</span><span class="p">(</span>
+        <span class="n">y_obs_list</span><span class="o">=</span><span class="n">y_obs_list</span><span class="p">,</span>
+        <span class="n">interpolation_input</span><span class="o">=</span><a href="../Modeling Classes/gempy.core.data.GeoModel.html#gempy.core.data.GeoModel" title="gempy.core.data.GeoModel" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span></a><span class="o">.</span><span class="n">interpolation_input_copy</span>
+    <span class="p">)</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">az</span><span class="o">.</span><span class="n">from_pyro</span><span class="p">(</span><span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">)</span>
+    <span class="n">az</span><span class="o">.</span><span class="n">plot_trace</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">prior</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Run Markov Chain Monte Carlo (MCMC) using the NUTS algorithm for probabilistic inversion</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">pyro</span><span class="o">.</span><span class="n">primitives</span><span class="o">.</span><span class="n">enable_validation</span><span class="p">(</span><span class="n">is_validate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">nuts_kernel</span> <span class="o">=</span> <span class="n">NUTS</span><span class="p">(</span><span class="n">pyro_model</span><span class="p">)</span>
+<span class="n">mcmc</span> <span class="o">=</span> <span class="n">MCMC</span><span class="p">(</span><span class="n">nuts_kernel</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="n">INFERENCE_SAMPLES</span><span class="p">,</span> <span class="n">warmup_steps</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">mcmc</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">y_obs_list</span><span class="p">,</span> <span class="n">interpolation_input</span><span class="o">=</span><a href="../Modeling Classes/gempy.core.data.GeoModel.html#gempy.core.data.GeoModel" title="gempy.core.data.GeoModel" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span></a><span class="o">.</span><span class="n">interpolation_input_copy</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Analyze posterior samples and predictives, and visualize the results</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">posterior_samples</span> <span class="o">=</span> <span class="n">mcmc</span><span class="o">.</span><span class="n">get_samples</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<span class="n">posterior_predictive</span> <span class="o">=</span> <span class="n">Predictive</span><span class="p">(</span><span class="n">pyro_model</span><span class="p">,</span> <span class="n">posterior_samples</span><span class="p">)</span>
+<span class="n">posterior_predictive</span> <span class="o">=</span> <span class="n">posterior_predictive</span><span class="p">(</span>
+    <span class="n">y_obs_list</span><span class="o">=</span><span class="n">y_obs_list</span><span class="p">,</span>
+    <span class="n">interpolation_input</span><span class="o">=</span><a href="../Modeling Classes/gempy.core.data.GeoModel.html#gempy.core.data.GeoModel" title="gempy.core.data.GeoModel" class="sphx-glr-backref-module-gempy-core-data sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">geo_model</span></a><span class="o">.</span><span class="n">interpolation_input_copy</span>
+<span class="p">)</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">az</span><span class="o">.</span><span class="n">from_pyro</span><span class="p">(</span>
+    <span class="n">posterior</span><span class="o">=</span><span class="n">mcmc</span><span class="p">,</span>
+    <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">,</span>
+    <span class="n">posterior_predictive</span><span class="o">=</span><span class="n">posterior_predictive</span>
+<span class="p">)</span>
+
+<span class="n">az</span><span class="o">.</span><span class="n">plot_trace</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Create density plots for posterior and prior distributions
+These plots provide insights into the parameter distributions and their changes.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gempy_probability.plot_posterior</span> <span class="kn">import</span> <span class="n">default_red</span><span class="p">,</span> <span class="n">default_blue</span>
+<span class="n">az</span><span class="o">.</span><span class="n">plot_density</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="n">data</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">prior</span><span class="p">],</span>
+    <span class="n">shade</span><span class="o">=</span><span class="mf">.9</span><span class="p">,</span>
+    <span class="n">hdi_prob</span><span class="o">=</span><span class="mf">.99</span><span class="p">,</span>
+    <span class="n">data_labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Posterior&quot;</span><span class="p">,</span> <span class="s2">&quot;Prior&quot;</span><span class="p">],</span>
+    <span class="n">colors</span><span class="o">=</span><span class="p">[</span><span class="n">default_red</span><span class="p">,</span> <span class="n">default_blue</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;text.usetex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">az</span><span class="o">.</span><span class="n">plot_density</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">posterior_predictive</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">prior_predictive</span><span class="p">],</span>
+    <span class="n">shade</span><span class="o">=</span><span class="mf">.9</span><span class="p">,</span>
+    <span class="n">var_names</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s1">&#39;$\mu_{\text</span><span class="si">{gravity}</span><span class="s1">}$&#39;</span><span class="p">],</span>
+    <span class="n">data_labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Posterior Predictive&quot;</span><span class="p">,</span> <span class="s2">&quot;Prior Predictive&quot;</span><span class="p">],</span>
+    <span class="n">colors</span><span class="o">=</span><span class="p">[</span><span class="n">default_red</span><span class="p">,</span> <span class="n">default_blue</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="k">pass</span>
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.452 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-probabilistic-inversion-3-2-wip-gravity-inversion-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/fc86e98b2abdb990e1e6a29c100c5d10/3.2_WIP_gravity_inversion.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">3.2_WIP_gravity_inversion.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/8d1a1bfe59afb81ee893a4c648112069/3.2_WIP_gravity_inversion.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">3.2_WIP_gravity_inversion.py</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static/logos/gempy.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=gempy-project&repo=gempy&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Probabilistic modeling for Structural Geology</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../examples_intro/index.html">Intro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples_first_example_of_inference/index.html">﻿1 - First example of inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples_basic_geology/index.html">﻿2 - Probabilistic Geomodel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">﻿3 - Probabilistic Geophysics (WIP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples_utils/index.html">﻿Utilities</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference.html">Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference.html#data-classes">Data Classes</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023-2024, Gempy Probability Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="../_sources/examples_probabilistic_inversion/3.2_WIP_gravity_inversion.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

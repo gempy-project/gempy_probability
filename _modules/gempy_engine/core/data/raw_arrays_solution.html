@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>gempy_engine.core.data.raw_arrays_solution &#8212; GemPy 2023.2.0b1 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b76e3c8a" />
+    <title>gempy_engine.core.data.raw_arrays_solution &#8212; GemPy 2024.2.0.3.dev0+gf344a731.d20240626 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=270d38c7" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css?v=61a4c737" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-dataframe.css?v=e5fbc548" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
-    <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=39c4bfd0"></script>
+    <script src="../../../../_static/documentation_options.js?v=bd57e1ea"></script>
     <script src="../../../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="icon" href="../../../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
@@ -34,45 +34,48 @@
           <div class="body" role="main">
             
   <h1>Source code for gempy_engine.core.data.raw_arrays_solution</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+<span></span><span class="kn">import</span> <span class="nn">enum</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">gempy_engine.core.backend_tensor</span> <span class="kn">import</span> <span class="n">BackendTensor</span>
-<span class="kn">from</span> <span class="nn">gempy_engine.core.data.interp_output</span> <span class="kn">import</span> <span class="n">InterpOutput</span>
-<span class="kn">from</span> <span class="nn">gempy_engine.core.data.dual_contouring_mesh</span> <span class="kn">import</span> <span class="n">DualContouringMesh</span>
-<span class="kn">from</span> <span class="nn">gempy_engine.core.data.octree_level</span> <span class="kn">import</span> <span class="n">OctreeLevel</span>
+<span class="kn">from</span> <span class="nn">..backend_tensor</span> <span class="kn">import</span> <span class="n">BackendTensor</span>
+<span class="kn">from</span> <span class="nn">.interp_output</span> <span class="kn">import</span> <span class="n">InterpOutput</span>
+<span class="kn">from</span> <span class="nn">.dual_contouring_mesh</span> <span class="kn">import</span> <span class="n">DualContouringMesh</span>
+<span class="kn">from</span> <span class="nn">.octree_level</span> <span class="kn">import</span> <span class="n">OctreeLevel</span>
 
 <span class="c1"># ? These two imports are suggesting that this class should be splatted and move one half into a gempy.module</span>
-<span class="kn">from</span> <span class="nn">gempy_engine.modules.octrees_topology.octrees_topology_interface</span> <span class="kn">import</span> <span class="n">get_regular_grid_value_for_level</span>
-<span class="kn">from</span> <span class="nn">gempy_engine.modules.octrees_topology.octrees_topology_interface</span> <span class="kn">import</span> <span class="n">ValueType</span>
-<span class="kn">from</span> <span class="nn">gempy_engine.optional_dependencies</span> <span class="kn">import</span> <span class="n">require_pandas</span><span class="p">,</span> <span class="n">require_subsurface</span>
+<span class="kn">from</span> <span class="nn">...modules.octrees_topology.octrees_topology_interface</span> <span class="kn">import</span> <span class="n">get_regular_grid_value_for_level</span>
+<span class="kn">from</span> <span class="nn">.output.blocks_value_type</span> <span class="kn">import</span> <span class="n">ValueType</span>
+<span class="kn">from</span> <span class="nn">...optional_dependencies</span> <span class="kn">import</span> <span class="n">require_pandas</span><span class="p">,</span> <span class="n">require_subsurface</span>
 
 
-<div class="viewcode-block" id="RawArraysSolution"><a class="viewcode-back" href="../../../../Modeling%20Classes/gempy.core.data.RawArraysSolution.html#gempy.core.data.RawArraysSolution">[docs]</a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RawArraysSolution">
+<a class="viewcode-back" href="../../../../Modeling%20Classes/gempy.core.data.RawArraysSolution.html#gempy.core.data.RawArraysSolution">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">RawArraysSolution</span><span class="p">:</span>
-    <span class="c1"># region Input data results</span>
-    <span class="c1"># ? Do I need these fields?</span>
-    <span class="c1"># weights_vector: np.ndarray</span>
-    <span class="c1"># scalar_field_at_surface_points: np.ndarray</span>
-    <span class="c1"># block_at_surface_points: np.ndarray</span>
-    <span class="c1"># mask_at_surface_points: np.ndarray</span>
-    <span class="c1"># values_at_surface_points: np.ndarray</span>
+<div class="viewcode-block" id="RawArraysSolution.BlockSolutionType">
+<a class="viewcode-back" href="../../../../Modeling%20Classes/gempy.core.data.RawArraysSolution.html#gempy.core.data.RawArraysSolution.BlockSolutionType">[docs]</a>
+    <span class="k">class</span> <span class="nc">BlockSolutionType</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">Enum</span><span class="p">):</span>
+        <span class="n">NONE</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">OCTREE</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">DENSE_GRID</span> <span class="o">=</span> <span class="mi">2</span></div>
 
-    <span class="c1"># endregion</span>
+        
 
     <span class="c1"># region Regular Grid</span>
-    <span class="n">lith_block</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">fault_block</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">litho_faults_block</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">lith_block</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">fault_block</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">litho_faults_block</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
 
-    <span class="n">scalar_field_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">block_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">mask_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">mask_matrix_squeezed</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">values_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">gradient</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">scalar_field_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">block_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">mask_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">mask_matrix_squeezed</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">values_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">gradient</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
     <span class="c1"># endregion</span>
 
     <span class="c1"># region other grids</span>
@@ -87,7 +90,7 @@
     <span class="c1"># endregion</span>
 
     <span class="c1"># region Mesh</span>
-    <span class="n">vertices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="n">vertices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
     <span class="n">edges</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="c1"># endregion</span>
 
@@ -100,83 +103,48 @@
     <span class="c1"># ? TODO: This could be just the init</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_gempy_engine_solutions</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">octrees_output</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">OctreeLevel</span><span class="p">],</span> <span class="n">meshes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">DualContouringMesh</span><span class="p">],</span>
-                                    <span class="n">fw_gravity</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;RawArraysSolution&quot;</span><span class="p">:</span>
+                                    <span class="n">block_solution_type</span><span class="p">:</span> <span class="n">BlockSolutionType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;RawArraysSolution&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
         <span class="n">raw_arrays_solution</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
 
-        <span class="c1"># region Blocks</span>
-        <span class="n">last_octree_level</span><span class="p">:</span> <span class="n">OctreeLevel</span> <span class="o">=</span> <span class="n">octrees_output</span><span class="p">[(</span><span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
-
-        <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">block_matrix</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_regular_grid_values_for_all_structural_groups</span><span class="p">(</span>
-            <span class="n">octree_output</span><span class="o">=</span><span class="n">octrees_output</span><span class="p">,</span>
-            <span class="n">scalar_type</span><span class="o">=</span><span class="n">ValueType</span><span class="o">.</span><span class="n">values_block</span>
-        <span class="p">)</span>
-
-        <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">fault_block</span> <span class="o">=</span> <span class="n">get_regular_grid_value_for_level</span><span class="p">(</span>
-            <span class="n">octree_list</span><span class="o">=</span><span class="n">octrees_output</span><span class="p">,</span>
-            <span class="n">level</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">value_type</span><span class="o">=</span><span class="n">ValueType</span><span class="o">.</span><span class="n">faults_block</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int8&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
-
-        <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">litho_faults_block</span> <span class="o">=</span> <span class="n">get_regular_grid_value_for_level</span><span class="p">(</span>
-            <span class="n">octree_list</span><span class="o">=</span><span class="n">octrees_output</span><span class="p">,</span>
-            <span class="n">level</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">value_type</span><span class="o">=</span><span class="n">ValueType</span><span class="o">.</span><span class="n">litho_faults_block</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
-
-        <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">scalar_field_matrix</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_regular_grid_values_for_all_structural_groups</span><span class="p">(</span>
-            <span class="n">octree_output</span><span class="o">=</span><span class="n">octrees_output</span><span class="p">,</span>
-            <span class="n">scalar_type</span><span class="o">=</span><span class="n">ValueType</span><span class="o">.</span><span class="n">scalar</span>
-        <span class="p">)</span>
-
-        <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">mask_matrix</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_regular_grid_values_for_all_structural_groups</span><span class="p">(</span>
-            <span class="n">octree_output</span><span class="o">=</span><span class="n">octrees_output</span><span class="p">,</span>
-            <span class="n">scalar_type</span><span class="o">=</span><span class="n">ValueType</span><span class="o">.</span><span class="n">mask_component</span>
-        <span class="p">)</span>
-
-        <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">mask_matrix_squeezed</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_regular_grid_values_for_all_structural_groups</span><span class="p">(</span>
-            <span class="n">octree_output</span><span class="o">=</span><span class="n">octrees_output</span><span class="p">,</span>
-            <span class="n">scalar_type</span><span class="o">=</span><span class="n">ValueType</span><span class="o">.</span><span class="n">squeeze_mask</span>
-        <span class="p">)</span>
-
-        <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">_set_lith_block</span><span class="p">(</span><span class="n">octrees_output</span><span class="p">)</span>
-        <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">_set_scalar_field_at_surface_points</span><span class="p">(</span><span class="n">last_octree_level</span><span class="p">)</span>
-        <span class="c1"># endregion</span>
-
-        <span class="c1"># region Grids</span>
         <span class="n">first_level_octree</span><span class="p">:</span> <span class="n">OctreeLevel</span> <span class="o">=</span> <span class="n">octrees_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">stacks_output</span> <span class="o">=</span> <span class="n">first_level_octree</span><span class="o">.</span><span class="n">outputs_centers</span>
+        <span class="n">collapsed_output</span><span class="p">:</span> <span class="n">InterpOutput</span> <span class="o">=</span> <span class="n">stacks_output</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># ! This is the scalar field. Usually we want the last one but not necessarily</span>
+        <span class="c1"># ? DEP: last_octree_level: OctreeLevel = octrees_output[(-1)]</span>
+
+        <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">_set_scalar_field_at_surface_points</span><span class="p">(</span><span class="n">first_level_octree</span><span class="p">)</span>
+
+        <span class="c1"># Region Blocks</span>
+        <span class="k">match</span> <span class="n">block_solution_type</span><span class="p">:</span>
+            <span class="k">case</span> <span class="bp">cls</span><span class="o">.</span><span class="n">BlockSolutionType</span><span class="o">.</span><span class="n">OCTREE</span><span class="p">:</span>
+                <span class="n">_fill_block_solutions_with_octree_output</span><span class="p">(</span><span class="n">octrees_output</span><span class="p">,</span> <span class="n">raw_arrays_solution</span><span class="p">)</span>
+                <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">dense_ids</span> <span class="o">=</span> <span class="n">BackendTensor</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">collapsed_output</span><span class="o">.</span><span class="n">ids_block_octree_grid</span><span class="p">)</span>
+            <span class="k">case</span> <span class="bp">cls</span><span class="o">.</span><span class="n">BlockSolutionType</span><span class="o">.</span><span class="n">DENSE_GRID</span><span class="p">:</span>
+                <span class="n">_fill_block_solutions_with_dense_grid</span><span class="p">(</span><span class="n">stacks_output</span><span class="p">,</span> <span class="n">raw_arrays_solution</span><span class="p">)</span>
+                <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">dense_ids</span> <span class="o">=</span> <span class="n">BackendTensor</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">collapsed_output</span><span class="o">.</span><span class="n">ids_block_dense_grid</span><span class="p">)</span>
+            <span class="k">case</span> <span class="bp">cls</span><span class="o">.</span><span class="n">BlockSolutionType</span><span class="o">.</span><span class="n">NONE</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Block solution type </span><span class="si">{</span><span class="n">block_solution_type</span><span class="si">}</span><span class="s2"> not recognized&quot;</span><span class="p">)</span>
+        
+
+        <span class="c1"># Endregion</span>
+
+        <span class="c1"># Region Grids</span>
 
         <span class="c1"># TODO: Make this more clever to account for the fact that we can have more than one scalar field</span>
-        <span class="n">output</span><span class="p">:</span> <span class="n">InterpOutput</span> <span class="o">=</span> <span class="n">first_level_octree</span><span class="o">.</span><span class="n">outputs_centers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># ! This is the scalar field. Usually we want the last one but not necessarily</span>
+        <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">geological_map</span> <span class="o">=</span> <span class="n">BackendTensor</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">collapsed_output</span><span class="o">.</span><span class="n">geological_map</span><span class="p">)</span>
+        <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">sections</span> <span class="o">=</span> <span class="n">BackendTensor</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">collapsed_output</span><span class="o">.</span><span class="n">sections</span><span class="p">)</span>
+        <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">custom</span> <span class="o">=</span> <span class="n">BackendTensor</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">collapsed_output</span><span class="o">.</span><span class="n">custom_grid_values</span><span class="p">)</span>
+        <span class="c1"># End region</span>
 
-        <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">geological_map</span> <span class="o">=</span> <span class="n">BackendTensor</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">geological_map</span><span class="p">)</span>
-        <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">sections</span> <span class="o">=</span> <span class="n">BackendTensor</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">sections</span><span class="p">)</span>
-        <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">custom</span> <span class="o">=</span> <span class="n">BackendTensor</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">custom_grid_values</span><span class="p">)</span>
-        <span class="c1"># endregion</span>
-
-        <span class="c1"># region Meshes</span>
+        <span class="c1"># Region Meshes</span>
         <span class="k">if</span> <span class="n">meshes</span><span class="p">:</span>
             <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">vertices</span> <span class="o">=</span> <span class="p">[</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span> <span class="k">for</span> <span class="n">mesh</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">]</span>
             <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="p">[</span><span class="n">mesh</span><span class="o">.</span><span class="n">edges</span> <span class="k">for</span> <span class="n">mesh</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">]</span>
-            <span class="c1"># TODO: I will have to apply the transform to this one</span>
 
-        <span class="c1"># endregion</span>
+        <span class="c1"># Endregion</span>
         <span class="k">return</span> <span class="n">raw_arrays_solution</span>
 
-    <span class="c1"># ? Should all these arrays being properties better?</span>
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_get_regular_grid_values_for_all_structural_groups</span><span class="p">(</span><span class="n">octree_output</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">OctreeLevel</span><span class="p">],</span> <span class="n">scalar_type</span><span class="p">:</span> <span class="n">ValueType</span><span class="p">):</span>
-        <span class="n">temp_list</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">octree_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">number_of_outputs</span><span class="p">):</span>
-            <span class="n">temp_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="n">get_regular_grid_value_for_level</span><span class="p">(</span>
-                    <span class="n">octree_list</span><span class="o">=</span><span class="n">octree_output</span><span class="p">,</span>
-                    <span class="n">level</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                    <span class="n">value_type</span><span class="o">=</span><span class="n">scalar_type</span><span class="p">,</span>
-                    <span class="n">scalar_n</span><span class="o">=</span><span class="n">i</span>
-                <span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
-            <span class="p">)</span>
-        <span class="n">scalar_field_stacked</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">temp_list</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">scalar_field_stacked</span>
 
     <span class="k">def</span> <span class="nf">_set_scalar_field_at_surface_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">octree_output</span><span class="p">:</span> <span class="n">OctreeLevel</span><span class="p">):</span>
         <span class="n">temp_list</span> <span class="o">=</span> <span class="p">[]</span>
@@ -185,17 +153,6 @@
             <span class="n">temp_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">BackendTensor</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">at_surface_points</span><span class="p">))</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">scalar_field_at_surface_points</span> <span class="o">=</span> <span class="n">temp_list</span>
-
-    <span class="k">def</span> <span class="nf">_set_lith_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">octree_output</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">OctreeLevel</span><span class="p">]):</span>
-
-        <span class="n">block</span> <span class="o">=</span> <span class="n">get_regular_grid_value_for_level</span><span class="p">(</span>
-            <span class="n">octree_list</span><span class="o">=</span><span class="n">octree_output</span><span class="p">,</span>
-            <span class="n">level</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">value_type</span><span class="o">=</span><span class="n">ValueType</span><span class="o">.</span><span class="n">ids</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int8&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
-
-        <span class="n">block</span><span class="p">[</span><span class="n">block</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c1"># Move basement from first to last</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lith_block</span> <span class="o">=</span> <span class="n">block</span>
 
     <span class="k">def</span> <span class="nf">meshes_to_subsurface</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">ss</span> <span class="o">=</span> <span class="n">require_subsurface</span><span class="p">()</span>
@@ -209,16 +166,106 @@
             <span class="n">simplex_array</span> <span class="o">+=</span> <span class="n">idx_max</span>
             <span class="n">idx_max</span> <span class="o">=</span> <span class="n">simplex_array</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span>
 
-        <span class="n">id_array</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">vertex</span><span class="p">)]</span>
+        <span class="n">vertex_id_array</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">vertex</span><span class="p">)]</span>
+        <span class="n">cell_id_array</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">simplex_list</span><span class="p">)]</span>
 
-        <span class="n">concatenated_id_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">id_array</span><span class="p">)</span>
+        <span class="n">concatenated_id_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">vertex_id_array</span><span class="p">)</span>
+        <span class="n">concatenated_cell_id_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">cell_id_array</span><span class="p">)</span>
+        
         <span class="n">meshes</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">UnstructuredData</span> <span class="o">=</span> <span class="n">ss</span><span class="o">.</span><span class="n">UnstructuredData</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span>
             <span class="n">vertex</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">vertex</span><span class="p">),</span>
             <span class="n">cells</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">simplex_list</span><span class="p">),</span>
-            <span class="n">vertex_attr</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">concatenated_id_array</span><span class="p">})</span>
+            <span class="n">vertex_attr</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">concatenated_id_array</span><span class="p">}),</span>
+            <span class="n">cells_attr</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">concatenated_cell_id_array</span><span class="p">})</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">meshes</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_fill_block_solutions_with_octree_output</span><span class="p">(</span><span class="n">octrees_output</span><span class="p">,</span> <span class="n">raw_arrays_solution</span><span class="p">:</span> <span class="s2">&quot;RawArraysSolution&quot;</span><span class="p">):</span>
+
+    <span class="c1"># Region Local Functions</span>
+    <span class="k">def</span> <span class="nf">___get_regular_grid_values_for_all_structural_groups</span><span class="p">(</span><span class="n">octree_output</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">OctreeLevel</span><span class="p">],</span> <span class="n">scalar_type</span><span class="p">:</span> <span class="n">ValueType</span><span class="p">):</span>
+        <span class="n">temp_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">octree_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">number_of_outputs</span><span class="p">):</span>
+            <span class="n">dense_valuse_from_octree</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">get_regular_grid_value_for_level</span><span class="p">(</span>
+                <span class="n">octree_list</span><span class="o">=</span><span class="n">octree_output</span><span class="p">,</span>
+                <span class="n">level</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">value_type</span><span class="o">=</span><span class="n">scalar_type</span><span class="p">,</span>
+                <span class="n">scalar_n</span><span class="o">=</span><span class="n">i</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+            <span class="n">temp_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dense_valuse_from_octree</span><span class="p">)</span>
+        <span class="n">scalar_field_stacked</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">temp_list</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">scalar_field_stacked</span>
+
+    <span class="c1"># Endregion</span>
+
+    <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">block_matrix</span> <span class="o">=</span> <span class="n">___get_regular_grid_values_for_all_structural_groups</span><span class="p">(</span>
+        <span class="n">octree_output</span><span class="o">=</span><span class="n">octrees_output</span><span class="p">,</span>
+        <span class="n">scalar_type</span><span class="o">=</span><span class="n">ValueType</span><span class="o">.</span><span class="n">values_block</span>
+    <span class="p">)</span>
+    <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">fault_block</span> <span class="o">=</span> <span class="n">get_regular_grid_value_for_level</span><span class="p">(</span>
+        <span class="n">octree_list</span><span class="o">=</span><span class="n">octrees_output</span><span class="p">,</span>
+        <span class="n">level</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">value_type</span><span class="o">=</span><span class="n">ValueType</span><span class="o">.</span><span class="n">faults_block</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int8&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">litho_faults_block</span> <span class="o">=</span> <span class="n">get_regular_grid_value_for_level</span><span class="p">(</span>
+        <span class="n">octree_list</span><span class="o">=</span><span class="n">octrees_output</span><span class="p">,</span>
+        <span class="n">level</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">value_type</span><span class="o">=</span><span class="n">ValueType</span><span class="o">.</span><span class="n">litho_faults_block</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">scalar_field_matrix</span> <span class="o">=</span> <span class="n">___get_regular_grid_values_for_all_structural_groups</span><span class="p">(</span>
+        <span class="n">octree_output</span><span class="o">=</span><span class="n">octrees_output</span><span class="p">,</span>
+        <span class="n">scalar_type</span><span class="o">=</span><span class="n">ValueType</span><span class="o">.</span><span class="n">scalar</span>
+    <span class="p">)</span>
+    <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">mask_matrix</span> <span class="o">=</span> <span class="n">___get_regular_grid_values_for_all_structural_groups</span><span class="p">(</span>
+        <span class="n">octree_output</span><span class="o">=</span><span class="n">octrees_output</span><span class="p">,</span>
+        <span class="n">scalar_type</span><span class="o">=</span><span class="n">ValueType</span><span class="o">.</span><span class="n">mask_component</span>
+    <span class="p">)</span>
+    <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">mask_matrix_squeezed</span> <span class="o">=</span> <span class="n">___get_regular_grid_values_for_all_structural_groups</span><span class="p">(</span>
+        <span class="n">octree_output</span><span class="o">=</span><span class="n">octrees_output</span><span class="p">,</span>
+        <span class="n">scalar_type</span><span class="o">=</span><span class="n">ValueType</span><span class="o">.</span><span class="n">squeeze_mask</span>
+    <span class="p">)</span>
+
+    <span class="n">lith_block_temp</span> <span class="o">=</span> <span class="n">get_regular_grid_value_for_level</span><span class="p">(</span>
+        <span class="n">octree_list</span><span class="o">=</span><span class="n">octrees_output</span><span class="p">,</span>
+        <span class="n">level</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">value_type</span><span class="o">=</span><span class="n">ValueType</span><span class="o">.</span><span class="n">ids</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int8&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    <span class="n">lith_block_temp</span><span class="p">[</span><span class="n">lith_block_temp</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">lith_block_temp</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c1"># Move basement from first to last</span>
+    <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">lith_block</span> <span class="o">=</span> <span class="n">lith_block_temp</span>
+
+
+<span class="k">def</span> <span class="nf">_fill_block_solutions_with_dense_grid</span><span class="p">(</span><span class="n">stacks_output</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">InterpOutput</span><span class="p">],</span> <span class="n">raw_arrays_solution</span><span class="p">:</span> <span class="s2">&quot;RawArraysSolution&quot;</span><span class="p">):</span>
+    <span class="c1"># Region Local Functions</span>
+    <span class="k">def</span> <span class="nf">___get_regular_grid_values_for_all_structural_groups</span><span class="p">(</span><span class="n">stacks_output</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">InterpOutput</span><span class="p">],</span> <span class="n">scalar_type</span><span class="p">:</span> <span class="n">ValueType</span><span class="p">):</span>
+        <span class="n">temp_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">stacks_output</span> <span class="ow">in</span> <span class="n">stacks_output</span><span class="p">:</span>
+            <span class="n">dense_values_from_dense_grid</span> <span class="o">=</span> <span class="n">stacks_output</span><span class="o">.</span><span class="n">get_block_from_value_type</span><span class="p">(</span>
+                <span class="n">value_type</span><span class="o">=</span><span class="n">scalar_type</span><span class="p">,</span>
+                <span class="n">slice_</span><span class="o">=</span><span class="n">stacks_output</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">dense_grid_slice</span>
+            <span class="p">)</span>
+            <span class="n">temp_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dense_values_from_dense_grid</span><span class="p">)</span>
+        <span class="n">scalar_field_stacked</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">temp_list</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">scalar_field_stacked</span>
+
+    <span class="c1"># Endregion</span>
+
+    <span class="n">collapsed_output</span> <span class="o">=</span> <span class="n">stacks_output</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">block_matrix</span> <span class="o">=</span> <span class="n">___get_regular_grid_values_for_all_structural_groups</span><span class="p">(</span><span class="n">stacks_output</span><span class="p">,</span> <span class="n">ValueType</span><span class="o">.</span><span class="n">values_block</span><span class="p">)</span>
+    <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">fault_block</span> <span class="o">=</span> <span class="n">collapsed_output</span><span class="o">.</span><span class="n">get_block_from_value_type</span><span class="p">(</span><span class="n">ValueType</span><span class="o">.</span><span class="n">faults_block</span><span class="p">,</span> <span class="n">slice_</span><span class="o">=</span><span class="n">collapsed_output</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">dense_grid_slice</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int8&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">litho_faults_block</span> <span class="o">=</span> <span class="n">collapsed_output</span><span class="o">.</span><span class="n">get_block_from_value_type</span><span class="p">(</span><span class="n">ValueType</span><span class="o">.</span><span class="n">litho_faults_block</span><span class="p">,</span> <span class="n">slice_</span><span class="o">=</span><span class="n">collapsed_output</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">dense_grid_slice</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">scalar_field_matrix</span> <span class="o">=</span> <span class="n">___get_regular_grid_values_for_all_structural_groups</span><span class="p">(</span><span class="n">stacks_output</span><span class="p">,</span> <span class="n">ValueType</span><span class="o">.</span><span class="n">scalar</span><span class="p">)</span>
+    <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">mask_matrix</span> <span class="o">=</span> <span class="n">___get_regular_grid_values_for_all_structural_groups</span><span class="p">(</span><span class="n">stacks_output</span><span class="p">,</span> <span class="n">ValueType</span><span class="o">.</span><span class="n">mask_component</span><span class="p">)</span>
+    <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">mask_matrix_squeezed</span> <span class="o">=</span> <span class="n">___get_regular_grid_values_for_all_structural_groups</span><span class="p">(</span><span class="n">stacks_output</span><span class="p">,</span> <span class="n">ValueType</span><span class="o">.</span><span class="n">squeeze_mask</span><span class="p">)</span>
+
+    <span class="n">lith_block_temp</span> <span class="o">=</span> <span class="n">collapsed_output</span><span class="o">.</span><span class="n">get_block_from_value_type</span><span class="p">(</span><span class="n">ValueType</span><span class="o">.</span><span class="n">ids</span><span class="p">,</span> <span class="n">slice_</span><span class="o">=</span><span class="n">collapsed_output</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">dense_grid_slice</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int8&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    <span class="n">lith_block_temp</span><span class="p">[</span><span class="n">lith_block_temp</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">lith_block_temp</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">raw_arrays_solution</span><span class="o">.</span><span class="n">lith_block</span> <span class="o">=</span> <span class="n">lith_block_temp</span>
+
+
 </pre></div>
 
           </div>
@@ -256,9 +303,9 @@
 <p class="caption" role="heading"><span class="caption-text">Probabilistic modeling for Structural Geology</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../examples_intro/index.html">Intro</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../examples_first_example_of_inference/index.html">﻿First example of inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../examples_basic_geology/index.html">﻿Probabilistic Geomodel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../examples_probabilistic_inversion/index.html">﻿Probabilistic Geophysics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples_first_example_of_inference/index.html">﻿1 - First example of inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples_basic_geology/index.html">﻿2 - Probabilistic Geomodel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples_probabilistic_inversion/index.html">﻿3 - Probabilistic Geophysics (WIP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../examples_utils/index.html">﻿Utilities</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
@@ -299,10 +346,10 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2023-2023, Gempy Probability Developers.
+      &copy;2023-2024, Gempy Probability Developers.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
     </div>

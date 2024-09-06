@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Overview to Bayesian Inference &#8212; GemPy 2024.2.0.3.dev0+gf344a731.d20240626 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=270d38c7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=61a4c737" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <script src="../../_static/documentation_options.js?v=bd57e1ea"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="icon" href="../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Normal Prior, single observation" href="1.1_Intro_to_Bayesian_Inference.html" />
+    <link rel="prev" title="﻿1 - First example of inference" href="../index.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-first-example-of-inference-1-bayesian-basics-1-0-overview-to-bayesian-inference-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code</p>
+</div>
+<section class="sphx-glr-example-title" id="overview-to-bayesian-inference">
+<span id="sphx-glr-examples-first-example-of-inference-1-bayesian-basics-1-0-overview-to-bayesian-inference-py"></span><h1>Overview to Bayesian Inference<a class="headerlink" href="#overview-to-bayesian-inference" title="Link to this heading">¶</a></h1>
+</section>
+<section id="model-definition">
+<h1>Model definition<a class="headerlink" href="#model-definition" title="Link to this heading">¶</a></h1>
+<p>Generally, models represent an abstraction of reality to answer a specific question, to fulfill a certain purpose, or to simulate (mimic) a proces or multiple processes. What models share is the aspiration to be as realistic as possible, so they can be used for prognoses and to better understand a real-world system.</p>
+<p>Fitting of these models to acquired measurements or observations is called calibration and a standard procedure for improving a models reliability (<strong>to answer the question it was designed for</strong>).</p>
+<p>Models can also be seen as a general descriptor of correlation of observations in multiple dimensions. Complex systems with generally sparse data coverage (e.g. the subsurface) are difficult to reliably encode from the real-world in the numerical abstraction, i.e. a computational model.</p>
+<p>In a probabilistic framework, a model is a framework of different input distributions, which, as an output, has another probability distribution.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">io</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">pyro</span>
+<span class="kn">import</span> <span class="nn">pyro.distributions</span> <span class="k">as</span> <span class="nn">dist</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+
+<span class="c1"># sphinx_gallery_thumbnail_number = -1</span>
+
+<span class="n">pyro</span><span class="o">.</span><span class="n">set_rng_seed</span><span class="p">(</span><span class="mi">4003</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="simplest-probabilistic-modeling">
+<h1>Simplest probabilistic modeling<a class="headerlink" href="#simplest-probabilistic-modeling" title="Link to this heading">¶</a></h1>
+<p>Consider the simplest probabilistic model where the output <span class="math notranslate nohighlight">\(y\)</span> of a model is a distribution.
+Let’s assume, <span class="math notranslate nohighlight">\(y\)</span> is a normal distribution, described by a mean <span class="math notranslate nohighlight">\(\mu\)</span> and a standard deviation <span class="math notranslate nohighlight">\(\sigma\)</span>.
+Usually, those are considered scalar values, but they themselves can be distributions.
+This will yield a change of the width and position of the normal distribution <span class="math notranslate nohighlight">\(y\)</span> with each iteration.</p>
+<p>As a reminder, a normal distribution is defined as:</p>
+<div class="math notranslate nohighlight">
+\[y = \frac{1}{\sigma \sqrt{2\pi}} \, e^{-\frac{(x - \mu)^2}{2 \sigma ^2}}\]</div>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\mu\)</span>: mean (Normal distribution)</p></li>
+<li><p><span class="math notranslate nohighlight">\(\sigma\)</span>: standard deviation (Gamma distribution, Gamma log-likelihood)</p></li>
+<li><p><span class="math notranslate nohighlight">\(y\)</span>: Normal distribution</p></li>
+</ul>
+<p>With this constructed model, we are able to infer which model parameters will fit observations better by optimizing for regions with high density mass.
+In addition (or even substituting) to data observations, informative values like prior simulations or expert knowledge can pour into the construction of the first <span class="math notranslate nohighlight">\(y\)</span> distribution, the <cite>prior</cite>.</p>
+<p>There isn’t a limitation about how “informative” a prior can or must be. Depending on the variance of the model’s parameters
+and on the number of observations, a model will be more <cite>prior driven</cite> or <cite>data driven</cite>.</p>
+<p>Let’s set up a <cite>Pyro</cite> model using the <cite>thickness_observation</cite> from above as observations and with <span class="math notranslate nohighlight">\(\mu\)</span> and <span class="math notranslate nohighlight">\(\sigma\)</span> being:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\mu = \text{Normal distribution with mean } 2.08 \text{ and standard deviation } 0.07\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\sigma = \text{Gamma distribution with } \alpha = 0.3 \text{ and } \beta = 3\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(y = \text{Normal distribution with } \mu, \sigma \text{ and thickness_observation_list as observations}\)</span></p></li>
+</ul>
+<p>A <a class="reference external" href="https://docs.pymc.io/en/latest/api/distributions/generated/pymc.Gamma.html">Gamma distribution</a>
+can also be expressed by mean and standard deviation with <span class="math notranslate nohighlight">\(\alpha = \frac{\mu^2}{\sigma^2}\)</span> and
+<span class="math notranslate nohighlight">\(\beta = \frac{\mu}{\sigma^2}\)</span>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">model</span><span class="p">(</span><span class="n">distributions_family</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">distributions_family</span> <span class="o">==</span> <span class="s2">&quot;normal_distribution&quot;</span><span class="p">:</span>
+        <span class="n">param_mean</span> <span class="o">=</span> <span class="n">pyro</span><span class="o">.</span><span class="n">param</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">mu_</span><span class="si">{prior}</span><span class="s1">$&#39;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">2.07</span><span class="p">))</span>
+        <span class="n">param_std</span> <span class="o">=</span> <span class="n">pyro</span><span class="o">.</span><span class="n">param</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">sigma_</span><span class="si">{prior}</span><span class="s1">$&#39;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.07</span><span class="p">),</span> <span class="n">constraint</span><span class="o">=</span><span class="n">dist</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">positive</span><span class="p">)</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="n">pyro</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">mu_</span><span class="si">{likelihood}</span><span class="s1">$&#39;</span><span class="p">,</span> <span class="n">dist</span><span class="o">.</span><span class="n">Normal</span><span class="p">(</span><span class="n">param_mean</span><span class="p">,</span> <span class="n">param_std</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">distributions_family</span> <span class="ow">in</span> <span class="s2">&quot;uniform_distribution&quot;</span><span class="p">:</span>
+        <span class="n">param_low</span> <span class="o">=</span> <span class="n">pyro</span><span class="o">.</span><span class="n">param</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">mu_</span><span class="si">{prior}</span><span class="s1">$&#39;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">param_high</span> <span class="o">=</span> <span class="n">pyro</span><span class="o">.</span><span class="n">param</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">sigma_</span><span class="si">{prior}</span><span class="s1">$&#39;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="n">pyro</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">mu_</span><span class="si">{likelihood}</span><span class="s1">$&#39;</span><span class="p">,</span> <span class="n">dist</span><span class="o">.</span><span class="n">Uniform</span><span class="p">(</span><span class="n">param_low</span><span class="p">,</span> <span class="n">param_high</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;distributions_family must be either &#39;normal_distribution&#39; or &#39;uniform_distribution&#39;&quot;</span><span class="p">)</span>
+    <span class="n">param_concentration</span> <span class="o">=</span> <span class="n">pyro</span><span class="o">.</span><span class="n">param</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">alpha_</span><span class="si">{prior}</span><span class="s1">$&#39;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.3</span><span class="p">),</span> <span class="n">constraint</span><span class="o">=</span><span class="n">dist</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">positive</span><span class="p">)</span>
+    <span class="n">param_rate</span> <span class="o">=</span> <span class="n">pyro</span><span class="o">.</span><span class="n">param</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">beta_</span><span class="si">{prior}</span><span class="s1">$&#39;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">constraint</span><span class="o">=</span><span class="n">dist</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">positive</span><span class="p">)</span>
+
+    <span class="n">sigma</span> <span class="o">=</span> <span class="n">pyro</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">sigma_</span><span class="si">{likelihood}</span><span class="s1">$&#39;</span><span class="p">,</span> <span class="n">dist</span><span class="o">.</span><span class="n">Gamma</span><span class="p">(</span><span class="n">param_concentration</span><span class="p">,</span> <span class="n">param_rate</span><span class="p">))</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">pyro</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="s1">&#39;$y$&#39;</span><span class="p">,</span> <span class="n">dist</span><span class="o">.</span><span class="n">Normal</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">),</span> <span class="n">obs</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">y</span>
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">y_obs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mf">2.12</span><span class="p">])</span>
+<span class="n">y_obs_list</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mf">2.12</span><span class="p">,</span> <span class="mf">2.06</span><span class="p">,</span> <span class="mf">2.08</span><span class="p">,</span> <span class="mf">2.05</span><span class="p">,</span> <span class="mf">2.08</span><span class="p">,</span> <span class="mf">2.09</span><span class="p">,</span>
+                           <span class="mf">2.19</span><span class="p">,</span> <span class="mf">2.07</span><span class="p">,</span> <span class="mf">2.16</span><span class="p">,</span> <span class="mf">2.11</span><span class="p">,</span> <span class="mf">2.13</span><span class="p">,</span> <span class="mf">1.92</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Render the model as a graph</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">pyro</span><span class="o">.</span><span class="n">render_model</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+    <span class="n">model_args</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;normal_distribution&quot;</span><span class="p">,</span> <span class="n">y_obs_list</span><span class="p">,),</span>
+    <span class="n">render_params</span><span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">render_distributions</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">attr</span><span class="p">(</span><span class="n">dpi</span><span class="o">=</span><span class="s1">&#39;300&#39;</span><span class="p">)</span>
+<span class="c1"># Convert the graph to a PNG image format</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">pipe</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;png&#39;</span><span class="p">)</span>
+
+<span class="c1"># Open the image with PIL</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+
+<span class="c1"># Plot the image with matplotlib</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>  <span class="c1"># Turn off axis</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_1.0_Overview_to_Bayesian_Inference_001.png" srcset="../../_images/sphx_glr_1.0_Overview_to_Bayesian_Inference_001.png" alt="1.0 Overview to Bayesian Inference" class = "sphx-glr-single-img"/></section>
+<section id="next">
+<h1>Next:<a class="headerlink" href="#next" title="Link to this heading">¶</a></h1>
+<ul class="simple">
+<li><p>Several Observations: (<a class="reference internal" href="1.2_Intro_to_Bayesian_Inference.html"><span class="doc">Normal Prior, several observations</span></a>)</p></li>
+<li><p>One Observation: (<a class="reference internal" href="1.1_Intro_to_Bayesian_Inference.html"><span class="doc">Normal Prior, single observation</span></a>)</p></li>
+</ul>
+</section>
+<section id="license">
+<h1>License<a class="headerlink" href="#license" title="Link to this heading">¶</a></h1>
+<p>The code in this case study is copyrighted by Miguel de la Varga and licensed under the new BSD (3-clause) license:</p>
+<p><a class="reference external" href="https://opensource.org/licenses/BSD-3-Clause">https://opensource.org/licenses/BSD-3-Clause</a></p>
+<p>The text and figures in this case study are copyrighted by Miguel de la Varga and licensed under the CC BY-NC 4.0 license:</p>
+<p><a class="reference external" href="https://creativecommons.org/licenses/by-nc/4.0/">https://creativecommons.org/licenses/by-nc/4.0/</a>
+Make sure to replace the links with actual hyperlinks if you’re using a platform that supports it (e.g., Markdown or HTML). Otherwise, the plain URLs work fine for plain text.</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.349 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-first-example-of-inference-1-bayesian-basics-1-0-overview-to-bayesian-inference-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/d8db549bd1683ebb1093feb01dc0eb69/1.0_Overview_to_Bayesian_Inference.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">1.0_Overview_to_Bayesian_Inference.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/6d50fb4c24a8dc37a5d9f90490a2a121/1.0_Overview_to_Bayesian_Inference.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">1.0_Overview_to_Bayesian_Inference.py</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../index.html">
+    <img class="logo" src="../../_static/logos/gempy.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=gempy-project&repo=gempy&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Probabilistic modeling for Structural Geology</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../examples_intro/index.html">Intro</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">﻿1 - First example of inference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html#simple-example-using-pyro-moving-the-bell">Simple example using Pyro: Moving the bell</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#type-of-probabilistic-models">Type of probabilistic models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#priors-as-joint-probability">Priors as joint probability</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples_basic_geology/index.html">﻿2 - Probabilistic Geomodel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples_probabilistic_inversion/index.html">﻿3 - Probabilistic Geophysics (WIP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples_utils/index.html">﻿Utilities</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html#data-classes">Data Classes</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">﻿1 - First example of inference</a><ul>
+      <li>Previous: <a href="../index.html" title="previous chapter">﻿1 - First example of inference</a></li>
+      <li>Next: <a href="1.1_Intro_to_Bayesian_Inference.html" title="next chapter">Normal Prior, single observation</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023-2024, Gempy Probability Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="../../_sources/examples_first_example_of_inference/1-bayesian_basics/1.0_Overview_to_Bayesian_Inference.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

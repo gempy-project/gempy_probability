@@ -1,25 +1,26 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Normal Prior, several observations &#8212; GemPy 2023.2.0b1 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b76e3c8a" />
+    <title>Normal Prior, single observation &#8212; GemPy 2024.2.0.3.dev0+gf344a731.d20240626 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=270d38c7" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=61a4c737" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
-    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=e5fbc548" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=39c4bfd0"></script>
+    <script src="../../_static/documentation_options.js?v=bd57e1ea"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Uniform Prior, several observations" href="1.2_Intro_to_Bayesian_Inference.html" />
-    <link rel="prev" title="﻿1 - First example of inference" href="../index.html" />
+    <link rel="next" title="Normal Prior, several observations" href="1.2_Intro_to_Bayesian_Inference.html" />
+    <link rel="prev" title="Overview to Bayesian Inference" href="1.0_Overview_to_Bayesian_Inference.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -41,124 +42,188 @@
 <p><a class="reference internal" href="#sphx-glr-download-examples-first-example-of-inference-1-bayesian-basics-1-1-intro-to-bayesian-inference-py"><span class="std std-ref">Go to the end</span></a>
 to download the full example code</p>
 </div>
-<section class="sphx-glr-example-title" id="normal-prior-several-observations">
-<span id="sphx-glr-examples-first-example-of-inference-1-bayesian-basics-1-1-intro-to-bayesian-inference-py"></span><h1>Normal Prior, several observations<a class="headerlink" href="#normal-prior-several-observations" title="Permalink to this heading">¶</a></h1>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># sphinx_gallery_thumbnail_number = -1</span>
+<section class="sphx-glr-example-title" id="normal-prior-single-observation">
+<span id="sphx-glr-examples-first-example-of-inference-1-bayesian-basics-1-1-intro-to-bayesian-inference-py"></span><h1>Normal Prior, single observation<a class="headerlink" href="#normal-prior-single-observation" title="Link to this heading">¶</a></h1>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># sphinx_gallery_thumbnail_number = -1</span>
 
 <span class="kn">import</span> <span class="nn">arviz</span> <span class="k">as</span> <span class="nn">az</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pyro</span>
 <span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">matplotlib.ticker</span> <span class="kn">import</span> <span class="n">StrMethodFormatter</span>
 
 <span class="kn">from</span> <span class="nn">gempy_probability.plot_posterior</span> <span class="kn">import</span> <span class="n">PlotPosterior</span>
 <span class="kn">from</span> <span class="nn">_aux_func</span> <span class="kn">import</span> <span class="n">infer_model</span>
+
+<span class="n">az</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s2">&quot;arviz-doc&quot;</span><span class="p">)</span>
 
 <span class="n">y_obs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mf">2.12</span><span class="p">])</span>
 <span class="n">y_obs_list</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mf">2.12</span><span class="p">,</span> <span class="mf">2.06</span><span class="p">,</span> <span class="mf">2.08</span><span class="p">,</span> <span class="mf">2.05</span><span class="p">,</span> <span class="mf">2.08</span><span class="p">,</span> <span class="mf">2.09</span><span class="p">,</span>
                            <span class="mf">2.19</span><span class="p">,</span> <span class="mf">2.07</span><span class="p">,</span> <span class="mf">2.16</span><span class="p">,</span> <span class="mf">2.11</span><span class="p">,</span> <span class="mf">2.13</span><span class="p">,</span> <span class="mf">1.92</span><span class="p">])</span>
 <span class="n">pyro</span><span class="o">.</span><span class="n">set_rng_seed</span><span class="p">(</span><span class="mi">4003</span><span class="p">)</span>
+
+<span class="c1"># Before diving in sampling, let&#39;s look at a model, where we have a single observation to sample the posterior from a prior with a normal</span>
+<span class="c1"># distribution for :math:`\mu` and a gamma distribution for :math:`\sigma`:</span>
 </pre></div>
 </div>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">az_data</span> <span class="o">=</span> <span class="n">infer_model</span><span class="p">(</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">az_data</span> <span class="o">=</span> <span class="n">infer_model</span><span class="p">(</span>
     <span class="n">distributions_family</span><span class="o">=</span><span class="s2">&quot;normal_distribution&quot;</span><span class="p">,</span>
-    <span class="n">data</span><span class="o">=</span><span class="n">y_obs_list</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">y_obs</span>
 <span class="p">)</span>
 <span class="n">az</span><span class="o">.</span><span class="n">plot_trace</span><span class="p">(</span><span class="n">az_data</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<img src="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_001.png" srcset="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_001.png" alt="$\mu$, $\mu$, $\sigma$, $\sigma$" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Warmup:   0%|          | 0/1100 [00:00, ?it/s]
-Warmup:   2%|2         | 27/1100 [00:00, 267.56it/s, step size=3.15e-02, acc. prob=0.751]
-Warmup:   5%|4         | 54/1100 [00:00, 231.41it/s, step size=3.76e-02, acc. prob=0.772]
-Warmup:   7%|7         | 78/1100 [00:00, 233.50it/s, step size=3.78e-02, acc. prob=0.778]
-Sample:   9%|9         | 102/1100 [00:00, 223.27it/s, step size=4.21e-01, acc. prob=0.805]
-Sample:  14%|#4        | 154/1100 [00:00, 322.70it/s, step size=4.21e-01, acc. prob=0.822]
-Sample:  19%|#8        | 208/1100 [00:00, 392.56it/s, step size=4.21e-01, acc. prob=0.841]
-Sample:  24%|##3       | 262/1100 [00:00, 434.79it/s, step size=4.21e-01, acc. prob=0.814]
-Sample:  29%|##8       | 316/1100 [00:00, 464.33it/s, step size=4.21e-01, acc. prob=0.823]
-Sample:  33%|###3      | 367/1100 [00:00, 476.85it/s, step size=4.21e-01, acc. prob=0.830]
-Sample:  39%|###8      | 426/1100 [00:01, 510.47it/s, step size=4.21e-01, acc. prob=0.832]
-Sample:  43%|####3     | 478/1100 [00:01, 509.29it/s, step size=4.21e-01, acc. prob=0.828]
-Sample:  48%|####8     | 532/1100 [00:01, 514.86it/s, step size=4.21e-01, acc. prob=0.827]
-Sample:  53%|#####3    | 584/1100 [00:01, 513.21it/s, step size=4.21e-01, acc. prob=0.817]
-Sample:  58%|#####8    | 639/1100 [00:01, 520.98it/s, step size=4.21e-01, acc. prob=0.814]
-Sample:  63%|######2   | 692/1100 [00:01, 517.32it/s, step size=4.21e-01, acc. prob=0.815]
-Sample:  68%|######7   | 747/1100 [00:01, 526.57it/s, step size=4.21e-01, acc. prob=0.819]
-Sample:  73%|#######2  | 800/1100 [00:01, 517.05it/s, step size=4.21e-01, acc. prob=0.822]
-Sample:  77%|#######7  | 852/1100 [00:01, 508.68it/s, step size=4.21e-01, acc. prob=0.820]
-Sample:  83%|########2 | 910/1100 [00:01, 527.56it/s, step size=4.21e-01, acc. prob=0.818]
-Sample:  88%|########7 | 963/1100 [00:02, 522.28it/s, step size=4.21e-01, acc. prob=0.816]
-Sample:  92%|#########2| 1016/1100 [00:02, 524.35it/s, step size=4.21e-01, acc. prob=0.817]
-Sample:  97%|#########7| 1072/1100 [00:02, 534.56it/s, step size=4.21e-01, acc. prob=0.819]
-Sample: 100%|##########| 1100/1100 [00:02, 469.79it/s, step size=4.21e-01, acc. prob=0.820]
+<img src="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_001.png" srcset="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_001.png" alt="$\mu_{likelihood}$, $\mu_{likelihood}$, $\sigma_{likelihood}$, $\sigma_{likelihood}$" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Warmup:   0%|          | 0/1100 [00:00, ?it/s]
+Warmup:   0%|          | 1/1100 [00:00,  2.55it/s, step size=1.80e+00, acc. prob=1.000]
+Warmup:   2%|▏         | 27/1100 [00:00, 70.55it/s, step size=3.96e-02, acc. prob=0.754]
+Warmup:   4%|▍         | 42/1100 [00:00, 88.75it/s, step size=7.73e-02, acc. prob=0.773]
+Warmup:   5%|▌         | 57/1100 [00:00, 100.30it/s, step size=1.03e-01, acc. prob=0.781]
+Warmup:   6%|▋         | 71/1100 [00:00, 89.06it/s, step size=4.27e-02, acc. prob=0.777]
+Warmup:   8%|▊         | 83/1100 [00:01, 90.97it/s, step size=6.82e-02, acc. prob=0.782]
+Warmup:   9%|▉         | 101/1100 [00:01, 112.33it/s, step size=3.77e-01, acc. prob=1.000]
+Sample:  12%|█▏        | 136/1100 [00:01, 173.04it/s, step size=3.77e-01, acc. prob=0.711]
+Sample:  15%|█▌        | 168/1100 [00:01, 210.44it/s, step size=3.77e-01, acc. prob=0.697]
+Sample:  18%|█▊        | 201/1100 [00:01, 243.00it/s, step size=3.77e-01, acc. prob=0.739]
+Sample:  23%|██▎       | 255/1100 [00:01, 326.20it/s, step size=3.77e-01, acc. prob=0.573]
+Sample:  27%|██▋       | 294/1100 [00:01, 340.76it/s, step size=3.77e-01, acc. prob=0.580]
+Sample:  31%|███       | 340/1100 [00:01, 373.53it/s, step size=3.77e-01, acc. prob=0.531]
+Sample:  34%|███▍      | 379/1100 [00:01, 351.96it/s, step size=3.77e-01, acc. prob=0.580]
+Sample:  38%|███▊      | 416/1100 [00:02, 329.38it/s, step size=3.77e-01, acc. prob=0.612]
+Sample:  41%|████      | 450/1100 [00:02, 322.01it/s, step size=3.77e-01, acc. prob=0.615]
+Sample:  44%|████▍     | 483/1100 [00:02, 314.94it/s, step size=3.77e-01, acc. prob=0.632]
+Sample:  47%|████▋     | 515/1100 [00:02, 315.24it/s, step size=3.77e-01, acc. prob=0.629]
+Sample:  56%|█████▋    | 621/1100 [00:02, 523.07it/s, step size=3.77e-01, acc. prob=0.506]
+Sample:  66%|██████▌   | 724/1100 [00:02, 667.52it/s, step size=3.77e-01, acc. prob=0.426]
+Sample:  72%|███████▏  | 793/1100 [00:02, 469.48it/s, step size=3.77e-01, acc. prob=0.461]
+Sample:  77%|███████▋  | 850/1100 [00:02, 422.76it/s, step size=3.77e-01, acc. prob=0.477]
+Sample:  84%|████████▎ | 920/1100 [00:03, 482.23it/s, step size=3.77e-01, acc. prob=0.437]
+Sample:  89%|████████▉ | 983/1100 [00:03, 513.69it/s, step size=3.77e-01, acc. prob=0.417]
+Sample:  95%|█████████▍| 1041/1100 [00:03, 437.56it/s, step size=3.77e-01, acc. prob=0.439]
+Sample:  99%|█████████▉| 1091/1100 [00:03, 396.82it/s, step size=3.77e-01, acc. prob=0.458]
+Sample: 100%|██████████| 1100/1100 [00:03, 310.48it/s, step size=3.77e-01, acc. prob=0.461]
 
-/home/leguark/.virtualenvs/gempy-geotop-pilot/lib/python3.10/site-packages/pkg_resources/__init__.py:123: PkgResourcesDeprecationWarning: gempy.-version- is an invalid version and will not be supported in a future release
-  warnings.warn(
-/home/leguark/.virtualenvs/gempy-geotop-pilot/lib/python3.10/site-packages/arviz/data/io_pyro.py:157: UserWarning: Could not get vectorized trace, log_likelihood group will be omitted. Check your model vectorization or set log_likelihood=False
-  warnings.warn(
 posterior predictive shape not compatible with number of chains and draws.This can mean that some draws or even whole chains are not represented.
 </pre></div>
 </div>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">PlotPosterior</span><span class="p">(</span><span class="n">az_data</span><span class="p">)</span>
-<span class="n">p</span><span class="o">.</span><span class="n">create_figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">joyplot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">marginal</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="n">p</span><span class="o">.</span><span class="n">plot_normal_likelihood</span><span class="p">(</span><span class="s1">&#39;$\mu$&#39;</span><span class="p">,</span> <span class="s1">&#39;$\sigma$&#39;</span><span class="p">,</span> <span class="s1">&#39;$y$&#39;</span><span class="p">,</span> <span class="n">iteration</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">hide_bell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">p</span><span class="o">.</span><span class="n">likelihood_axes</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mf">1.90</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">)</span>
-<span class="n">p</span><span class="o">.</span><span class="n">likelihood_axes</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">StrMethodFormatter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{x:,.2f}</span><span class="s1">&#39;</span><span class="p">))</span>
-<span class="k">for</span> <span class="n">tick</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">likelihood_axes</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">():</span>
-    <span class="n">tick</span><span class="o">.</span><span class="n">set_rotation</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</pre></div>
-</div>
-<img src="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_002.png" srcset="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_002.png" alt="Likelihood" class = "sphx-glr-single-img"/><div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">PlotPosterior</span><span class="p">(</span><span class="n">az_data</span><span class="p">)</span>
-<span class="n">p</span><span class="o">.</span><span class="n">create_figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">joyplot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">marginal</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="n">p</span><span class="o">.</span><span class="n">plot_normal_likelihood</span><span class="p">(</span><span class="s1">&#39;$\mu$&#39;</span><span class="p">,</span> <span class="s1">&#39;$\sigma$&#39;</span><span class="p">,</span> <span class="s1">&#39;$y$&#39;</span><span class="p">,</span> <span class="n">iteration</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">hide_lines</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">p</span><span class="o">.</span><span class="n">likelihood_axes</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mf">1.70</span><span class="p">,</span> <span class="mf">2.40</span><span class="p">)</span>
-<span class="n">p</span><span class="o">.</span><span class="n">likelihood_axes</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">StrMethodFormatter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{x:,.2f}</span><span class="s1">&#39;</span><span class="p">))</span>
-<span class="k">for</span> <span class="n">tick</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">likelihood_axes</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">():</span>
-    <span class="n">tick</span><span class="o">.</span><span class="n">set_rotation</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</pre></div>
-</div>
-<img src="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_003.png" srcset="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_003.png" alt="Likelihood" class = "sphx-glr-single-img"/><div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">PlotPosterior</span><span class="p">(</span><span class="n">az_data</span><span class="p">)</span>
-
-<span class="n">p</span><span class="o">.</span><span class="n">create_figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span> <span class="n">joyplot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">marginal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">likelihood</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">31</span><span class="p">)</span>
-<span class="n">p</span><span class="o">.</span><span class="n">plot_joy</span><span class="p">((</span><span class="s1">&#39;$\mu$&#39;</span><span class="p">,</span> <span class="s1">&#39;$\sigma$&#39;</span><span class="p">),</span> <span class="s1">&#39;$y$&#39;</span><span class="p">,</span> <span class="n">iteration</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</pre></div>
-</div>
-<img src="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_004.png" srcset="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_004.png" alt="1.1 Intro to Bayesian Inference" class = "sphx-glr-single-img"/><div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">PlotPosterior</span><span class="p">(</span><span class="n">az_data</span><span class="p">)</span>
+<section id="prior-space">
+<h2>Prior Space<a class="headerlink" href="#prior-space" title="Link to this heading">¶</a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">PlotPosterior</span><span class="p">(</span><span class="n">az_data</span><span class="p">)</span>
 
 <span class="n">p</span><span class="o">.</span><span class="n">create_figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">joyplot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">marginal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">likelihood</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">p</span><span class="o">.</span><span class="n">plot_marginal</span><span class="p">(</span>
-    <span class="n">var_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;$\mu$&#39;</span><span class="p">,</span> <span class="s1">&#39;$\sigma$&#39;</span><span class="p">],</span>
+    <span class="n">var_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">mu_</span><span class="si">{likelihood}</span><span class="s1">$&#39;</span><span class="p">,</span> <span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">sigma_</span><span class="si">{likelihood}</span><span class="s1">$&#39;</span><span class="p">],</span>
     <span class="n">plot_trace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">credible_interval</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span>
+    <span class="n">credible_interval</span><span class="o">=</span><span class="mf">.93</span><span class="p">,</span>
     <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;kde&#39;</span><span class="p">,</span>
-    <span class="n">joint_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;contour&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;pcolormesh_kwargs&#39;</span><span class="p">:</span> <span class="p">{}},</span>
-    <span class="n">joint_kwargs_prior</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;contour&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;pcolormesh_kwargs&#39;</span><span class="p">:</span> <span class="p">{}})</span>
+    <span class="n">group</span><span class="o">=</span><span class="s2">&quot;prior&quot;</span><span class="p">,</span>
+    <span class="n">joint_kwargs</span><span class="o">=</span><span class="p">{</span>
+            <span class="s1">&#39;contour&#39;</span>          <span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s1">&#39;pcolormesh_kwargs&#39;</span><span class="p">:</span> <span class="p">{}</span>
+    <span class="p">},</span>
+    <span class="n">joint_kwargs_prior</span><span class="o">=</span><span class="p">{</span>
+            <span class="s1">&#39;contour&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s1">&#39;pcolormesh_kwargs&#39;</span><span class="p">:</span> <span class="p">{}</span>
+    <span class="p">}</span>
+<span class="p">)</span>
 
-<span class="n">p</span><span class="o">.</span><span class="n">plot_normal_likelihood</span><span class="p">(</span><span class="s1">&#39;$\mu$&#39;</span><span class="p">,</span> <span class="s1">&#39;$\sigma$&#39;</span><span class="p">,</span> <span class="s1">&#39;$y$&#39;</span><span class="p">,</span> <span class="n">iteration</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">hide_lines</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">axjoin</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mf">1.96</span><span class="p">,</span> <span class="mf">2.22</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">plot_normal_likelihood</span><span class="p">(</span>
+    <span class="n">mean</span><span class="o">=</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">mu_</span><span class="si">{likelihood}</span><span class="s1">$&#39;</span><span class="p">,</span>
+    <span class="n">std</span><span class="o">=</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">sigma_</span><span class="si">{likelihood}</span><span class="s1">$&#39;</span><span class="p">,</span>
+    <span class="n">obs</span><span class="o">=</span><span class="s1">&#39;$y$&#39;</span><span class="p">,</span>
+    <span class="n">iteration</span><span class="o">=-</span><span class="mi">6</span><span class="p">,</span>
+    <span class="n">hide_lines</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
 <span class="n">p</span><span class="o">.</span><span class="n">likelihood_axes</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mf">1.70</span><span class="p">,</span> <span class="mf">2.40</span><span class="p">)</span>
-
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<img src="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_005.png" srcset="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_005.png" alt="Likelihood" class = "sphx-glr-single-img"/></section>
+<img src="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_002.png" srcset="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_002.png" alt="Likelihood" class = "sphx-glr-single-img"/></section>
+<section id="prior-and-posterior-space">
+<h2>Prior and Posterior Space<a class="headerlink" href="#prior-and-posterior-space" title="Link to this heading">¶</a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">plot_posterior</span><span class="p">(</span><span class="n">iteration</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">PlotPosterior</span><span class="p">(</span><span class="n">az_data</span><span class="p">)</span>
+
+    <span class="n">p</span><span class="o">.</span><span class="n">create_figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">joyplot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">marginal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">likelihood</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">plot_marginal</span><span class="p">(</span>
+        <span class="n">var_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">mu_</span><span class="si">{likelihood}</span><span class="s1">$&#39;</span><span class="p">,</span> <span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">sigma_</span><span class="si">{likelihood}</span><span class="s1">$&#39;</span><span class="p">],</span>
+        <span class="n">plot_trace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">credible_interval</span><span class="o">=</span><span class="mf">.93</span><span class="p">,</span>
+        <span class="n">iteration</span><span class="o">=</span><span class="n">iteration</span><span class="p">,</span>
+        <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;kde&#39;</span><span class="p">,</span>
+        <span class="n">group</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span>
+        <span class="n">joint_kwargs</span><span class="o">=</span><span class="p">{</span>
+                <span class="s1">&#39;contour&#39;</span>          <span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s1">&#39;pcolormesh_kwargs&#39;</span><span class="p">:</span> <span class="p">{}</span>
+        <span class="p">},</span>
+        <span class="n">joint_kwargs_prior</span><span class="o">=</span><span class="p">{</span>
+                <span class="s1">&#39;contour&#39;</span>          <span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s1">&#39;pcolormesh_kwargs&#39;</span><span class="p">:</span> <span class="p">{}</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="n">p</span><span class="o">.</span><span class="n">axjoin</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mf">1.96</span><span class="p">,</span> <span class="mf">2.22</span><span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">plot_normal_likelihood</span><span class="p">(</span>
+        <span class="n">mean</span><span class="o">=</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">mu_</span><span class="si">{likelihood}</span><span class="s1">$&#39;</span><span class="p">,</span>
+        <span class="n">std</span><span class="o">=</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">sigma_</span><span class="si">{likelihood}</span><span class="s1">$&#39;</span><span class="p">,</span>
+        <span class="n">obs</span><span class="o">=</span><span class="s1">&#39;$y$&#39;</span><span class="p">,</span>
+        <span class="n">iteration</span><span class="o">=</span><span class="n">iteration</span><span class="p">,</span>
+        <span class="n">hide_lines</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">likelihood_axes</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mf">1.96</span><span class="p">,</span> <span class="mf">2.22</span><span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Iteration </span><span class="si">{</span><span class="n">iteration</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+
+<span class="k">for</span> <a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.int64" title="numpy.int64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">i</span></a> <span class="ow">in</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.linspace.html#numpy.linspace" title="numpy.linspace" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">linspace</span></a><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">800</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">):</span>
+    <span class="n">plot_posterior</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.int64" title="numpy.int64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">i</span></a><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="sphx-glr-horizontal">
+<li><img src="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_003.png" srcset="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_003.png" alt="Likelihood" class = "sphx-glr-multi-img"/></li>
+<li><img src="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_004.png" srcset="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_004.png" alt="Likelihood" class = "sphx-glr-multi-img"/></li>
+<li><img src="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_005.png" srcset="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_005.png" alt="Likelihood" class = "sphx-glr-multi-img"/></li>
+<li><img src="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_006.png" srcset="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_006.png" alt="Likelihood" class = "sphx-glr-multi-img"/></li>
+<li><img src="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_007.png" srcset="../../_images/sphx_glr_1.1_Intro_to_Bayesian_Inference_007.png" alt="Likelihood" class = "sphx-glr-multi-img"/></li>
+</ul>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/home/leguark/gempy_probability/gempy_probability/plot_posterior.py:254: UserWarning: color is redundantly defined by the &#39;color&#39; keyword argument and the fmt string &quot;bo&quot; (-&gt; color=&#39;b&#39;). The keyword argument will take precedence.
+  self.axjoin.plot(theta1_val, theta2_val, &#39;bo&#39;, ms=6, color=&#39;k&#39;)
+</pre></div>
+</div>
+<p>MCMC boils down to be a collection of methods helping to do Bayesian inference, thus based on Bayes Theorem:</p>
+<div class="math notranslate nohighlight">
+\[P(\theta | x) = \frac{P(x|\theta) P(\theta)}{P(x)}\]</div>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(P(\theta | x)\)</span> is the Posterior</p></li>
+<li><p><span class="math notranslate nohighlight">\(P(x)\)</span> is the Prior</p></li>
+<li><p><span class="math notranslate nohighlight">\(P(x | \theta)\)</span> is the Likelihood</p></li>
+<li><p><span class="math notranslate nohighlight">\(P(x)\)</span> is the Evidence</p></li>
+</ul>
+<p>As calculating the posterior in this form is most likely not possible in real-world problems, if one could sample from the posterior,
+one might approximate it with Monte Carlo. But in order to sample directly from the posterior, one would need to invert Bayes Theorem.</p>
+<p>The solution to this problem is, when we cannot draw Monte Carlo (MC) samples from the distribution directly, we let a Markov Chain
+do it for us. [1]</p>
+</section>
+<section id="what-con-we-do-next">
+<h2>What con we do next?<a class="headerlink" href="#what-con-we-do-next" title="Link to this heading">¶</a></h2>
+<p>Increasing the number of observations - sampling (<a class="reference internal" href="1.2_Intro_to_Bayesian_Inference.html"><span class="doc">Normal Prior, several observations</span></a>)</p>
+</section>
+</section>
 <section id="license">
-<h1>License<a class="headerlink" href="#license" title="Permalink to this heading">¶</a></h1>
+<h1>License<a class="headerlink" href="#license" title="Link to this heading">¶</a></h1>
 <p>The code in this case study is copyrighted by Miguel de la Varga and licensed under the new BSD (3-clause) license:</p>
 <p><a class="reference external" href="https://opensource.org/licenses/BSD-3-Clause">https://opensource.org/licenses/BSD-3-Clause</a></p>
 <p>The text and figures in this case study are copyrighted by Miguel de la Varga and licensed under the CC BY-NC 4.0 license:</p>
 <p><a class="reference external" href="https://creativecommons.org/licenses/by-nc/4.0/">https://creativecommons.org/licenses/by-nc/4.0/</a>
 Make sure to replace the links with actual hyperlinks if you’re using a platform that supports it (e.g., Markdown or HTML). Otherwise, the plain URLs work fine for plain text.</p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  5.847 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 15.768 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-first-example-of-inference-1-bayesian-basics-1-1-intro-to-bayesian-inference-py">
-<div class="sphx-glr-download sphx-glr-download-python docutils container">
-<p><a class="reference download internal" download="" href="../../_downloads/e19e779340a1b7dcc72b1d534c0271a7/1.1_Intro_to_Bayesian_Inference.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">1.1_Intro_to_Bayesian_Inference.py</span></code></a></p>
-</div>
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/fd01f7a876613ae3f5458f308d263f82/1.1_Intro_to_Bayesian_Inference.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">1.1_Intro_to_Bayesian_Inference.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/e19e779340a1b7dcc72b1d534c0271a7/1.1_Intro_to_Bayesian_Inference.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">1.1_Intro_to_Bayesian_Inference.py</span></code></a></p>
 </div>
 </div>
 <p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
@@ -221,8 +286,8 @@ Make sure to replace the links with actual hyperlinks if you’re using a platfo
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
   <li><a href="../index.html">﻿1 - First example of inference</a><ul>
-      <li>Previous: <a href="../index.html" title="previous chapter">﻿1 - First example of inference</a></li>
-      <li>Next: <a href="1.2_Intro_to_Bayesian_Inference.html" title="next chapter">Uniform Prior, several observations</a></li>
+      <li>Previous: <a href="1.0_Overview_to_Bayesian_Inference.html" title="previous chapter">Overview to Bayesian Inference</a></li>
+      <li>Next: <a href="1.2_Intro_to_Bayesian_Inference.html" title="next chapter">Normal Prior, several observations</a></li>
   </ul></li>
   </ul></li>
 </ul>
@@ -250,10 +315,10 @@ Make sure to replace the links with actual hyperlinks if you’re using a platfo
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2023-2023, Gempy Probability Developers.
+      &copy;2023-2024, Gempy Probability Developers.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |

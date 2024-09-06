@@ -17,9 +17,13 @@ from pyro.infer.autoguide import init_to_mean
 import gempy as gp
 import gempy_engine
 import gempy_viewer as gpv
+from gempy.modules.data_manipulation.engine_factory import interpolation_input_from_structural_frame
 from gempy_engine.core.backend_tensor import BackendTensor
 import arviz as az
+
+from gempy_engine.core.data.interpolation_input import InterpolationInput
 from gempy_probability.plot_posterior import default_red, default_blue
+
 # sphinx_gallery_thumbnail_number = -1
 
 # %%
@@ -28,7 +32,7 @@ data_path = os.path.abspath('../')
 
 
 # %%
-# Define a function for plotting geological settings with wells
+# Define a function for plotting geological settings with wells 
 def plot_geo_setting_well(geo_model):
     """
     This function plots the geological settings along with the well locations.
@@ -71,7 +75,6 @@ geo_model = gp.create_geomodel(
     )
 )
 
-
 # %%
 # Configuring the Model
 # ---------------------
@@ -103,7 +106,6 @@ gp.set_custom_grid(geo_model.grid, xyz_coord=xyz_coord)
 # Plot initial geological settings
 plot_geo_setting_well(geo_model=geo_model)
 
-
 # %%
 # Interpolating the Initial Guess
 # -------------------------------
@@ -116,7 +118,6 @@ gp.compute_model(
 )
 plot_geo_setting_well(geo_model=geo_model)
 
-
 # %%
 # Probabilistic Geomodeling with Pyro
 # -----------------------------------
@@ -124,7 +125,9 @@ plot_geo_setting_well(geo_model=geo_model)
 # By using Pyro, a probabilistic programming language, we define a model that integrates
 # geological data with uncertainty quantification.
 
-sp_coords_copy = geo_model.interpolation_input.surface_points.sp_coords.copy()
+type_ = gempy_engine.core.data.interpolation_input.InterpolationInput
+interpolation_input_copy: type_ = interpolation_input_from_structural_frame(geo_model)
+sp_coords_copy = interpolation_input_copy.surface_points.sp_coords
 # Change the backend to PyTorch for probabilistic modeling
 BackendTensor.change_backend_gempy(engine_backend=gp.data.AvailableBackends.PYTORCH)
 
@@ -142,12 +145,12 @@ def model(y_obs_list):
     It defines a prior distribution for the top layer's location and 
     computes the thickness of the geological layer as an observed variable.
     """
-    # Define prior for the top layer's location
+    # Define prior for the top layer's location:
     prior_mean = sp_coords_copy[0, 2]
     mu_top = pyro.sample(r'$\mu_{top}$', dist.Normal(prior_mean, torch.tensor(0.02, dtype=torch.float64)))
 
     # Update the model with the new top layer's location
-    interpolation_input = geo_model.interpolation_input
+    interpolation_input = interpolation_input_from_structural_frame(geo_model)
     interpolation_input.surface_points.sp_coords = torch.index_put(
         interpolation_input.surface_points.sp_coords,
         (torch.tensor([0]), torch.tensor([2])),
@@ -213,7 +216,6 @@ posterior_predictive = Predictive(model, posterior_samples)(y_obs_list)
 data = az.from_pyro(posterior=mcmc, prior=prior, posterior_predictive=posterior_predictive)
 az.plot_trace(data)
 plt.show()
-
 
 # %%
 # Density Plot of Posterior Predictive

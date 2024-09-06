@@ -6,10 +6,35 @@
 
 Computation times
 =================
-**00:26.972** total execution time for **examples_basic_geology** files:
+**00:19.883** total execution time for 2 files **from examples_basic_geology**:
 
-+--------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_examples_basic_geology_2-thickness_problem_gempy.py` (``2-thickness_problem_gempy.py``) | 00:21.673 | 0.0 MB |
-+--------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_examples_basic_geology_1-thickness_problem.py` (``1-thickness_problem.py``)             | 00:05.299 | 0.0 MB |
-+--------------------------------------------------------------------------------------------------------+-----------+--------+
+.. container::
+
+  .. raw:: html
+
+    <style scoped>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+    </style>
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script type="text/javascript" class="init">
+    $(document).ready( function () {
+        $('table.sg-datatable').DataTable({order: [[1, 'desc']]});
+    } );
+    </script>
+
+  .. list-table::
+   :header-rows: 1
+   :class: table table-striped sg-datatable
+
+   * - Example
+     - Time
+     - Mem (MB)
+   * - :ref:`sphx_glr_examples_basic_geology_2-thickness_problem_gempy.py` (``2-thickness_problem_gempy.py``)
+     - 00:19.883
+     - 0.0
+   * - :ref:`sphx_glr_examples_basic_geology_1-thickness_problem.py` (``1-thickness_problem.py``)
+     - 00:00.000
+     - 0.0

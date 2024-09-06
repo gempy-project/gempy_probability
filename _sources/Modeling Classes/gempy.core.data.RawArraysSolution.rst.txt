@@ -30,23 +30,23 @@
 
    .. autosummary::
    
-      ~RawArraysSolution.block_matrix
       ~RawArraysSolution.custom
       ~RawArraysSolution.edges
-      ~RawArraysSolution.fault_block
       ~RawArraysSolution.fw_gravity
       ~RawArraysSolution.fw_magnetic
       ~RawArraysSolution.geological_map
-      ~RawArraysSolution.gradient
-      ~RawArraysSolution.lith_block
-      ~RawArraysSolution.litho_faults_block
-      ~RawArraysSolution.mask_matrix
-      ~RawArraysSolution.mask_matrix_squeezed
-      ~RawArraysSolution.scalar_field_matrix
       ~RawArraysSolution.sections
       ~RawArraysSolution.topology_count
       ~RawArraysSolution.topology_edges
+      ~RawArraysSolution.lith_block
+      ~RawArraysSolution.fault_block
+      ~RawArraysSolution.litho_faults_block
+      ~RawArraysSolution.scalar_field_matrix
+      ~RawArraysSolution.block_matrix
+      ~RawArraysSolution.mask_matrix
+      ~RawArraysSolution.mask_matrix_squeezed
       ~RawArraysSolution.values_matrix
+      ~RawArraysSolution.gradient
       ~RawArraysSolution.vertices
    
    

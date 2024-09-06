@@ -33,6 +33,8 @@ Now we can define the probabilistic models:
 # -----------------------------
 
 import os
+import io
+from PIL import Image
 import matplotlib.pyplot as plt
 import pyro
 import pyro.distributions as dist
@@ -41,6 +43,8 @@ from pyro.infer import MCMC, NUTS, Predictive
 from pyro.infer.inspect import get_dependencies
 from gempy_probability.plot_posterior import PlotPosterior, default_red, default_blue
 import arviz as az
+
+az.style.use("arviz-doc")
 
 # %%
 # Introduction to the Problem
@@ -68,6 +72,7 @@ y_obs = torch.tensor([2.12])
 y_obs_list = torch.tensor([2.12, 2.06, 2.08, 2.05, 2.08, 2.09, 2.19, 2.07, 2.16, 2.11, 2.13, 1.92])
 pyro.set_rng_seed(4003)
 
+
 # Defining the probabilistic model
 def model(y_obs_list_):
     mu_top = pyro.sample(r'$\mu_{top}$', dist.Normal(3.05, 0.2))
@@ -82,8 +87,32 @@ def model(y_obs_list_):
     sigma_thickness = pyro.sample(r'$\sigma_{thickness}$', dist.Gamma(0.3, 3.0))
     y_thickness = pyro.sample(r'y_{thickness}', dist.Normal(mu_thickness, sigma_thickness), obs=y_obs_list_)
 
+
 # Exploring model dependencies
 dependencies = get_dependencies(model, model_args=y_obs_list[:1])
+dependencies
+
+# %%
+graph = pyro.render_model(
+    model=model,
+    model_args=(y_obs_list,),
+    render_params=True,
+    render_distributions=True,
+    render_deterministic=True
+)
+
+graph.attr(dpi='300')
+# Convert the graph to a PNG image format
+s = graph.pipe(format='png')
+
+# Open the image with PIL
+image = Image.open(io.BytesIO(s))
+
+# Plot the image with matplotlib
+plt.figure(figsize=(10, 4))
+plt.imshow(image)
+plt.axis('off')  # Turn off axis
+plt.show()
 
 # %%
 # Prior Sampling
@@ -92,7 +121,8 @@ dependencies = get_dependencies(model, model_args=y_obs_list[:1])
 # before considering the observed data.
 
 # Prior sampling
-prior = Predictive(model, num_samples=10)(y_obs_list)
+num_samples= 500
+prior = Predictive(model, num_samples=num_samples)(y_obs_list)
 
 # %%
 # Running MCMC Sampling
@@ -102,7 +132,7 @@ prior = Predictive(model, num_samples=10)(y_obs_list)
 
 # Running MCMC using the NUTS algorithm
 nuts_kernel = NUTS(model)
-mcmc = MCMC(nuts_kernel, num_samples=100, warmup_steps=20)
+mcmc = MCMC(nuts_kernel, num_samples=num_samples, warmup_steps=100)
 mcmc.run(y_obs_list)
 
 # %%
@@ -112,7 +142,7 @@ mcmc.run(y_obs_list)
 # This step allows us to make predictions based on the posterior distribution.
 
 # Sampling from the posterior predictive distribution
-posterior_samples = mcmc.get_samples()
+posterior_samples = mcmc.get_samples(num_samples)
 posterior_predictive = Predictive(model, posterior_samples)(y_obs_list)
 
 # %%
@@ -129,7 +159,12 @@ data = az.from_pyro(
 )
 
 # Plotting trace of the sampled parameters
-az.plot_trace(data)
+az.plot_trace(data, kind="trace", figsize=(10, 10), compact=False)
+plt.show()
+
+# %%
+# Plotting trace of the sampled parameters
+az.plot_trace(posterior_predictive, var_names= (r"$\mu_{thickness}$"), kind="trace")
 plt.show()
 
 # %%
@@ -141,13 +176,18 @@ plt.show()
 # Plotting density of posterior and prior distributions
 az.plot_density(
     data=[data, data.prior],
-    shade=.9,
+    hdi_prob=0.95,
+    shade=.2,
     data_labels=["Posterior", "Prior"],
     colors=[default_red, default_blue],
 )
+
+
 plt.show()
 
 # %%
+# Can we see a correlation between the posteriors of $\mu_{bottom}$ and $\mu_{top}$?
+#
 # Density Plots of Posterior Predictive and Prior Predictive
 # ----------------------------------------------------------
 # These plots show the distribution of the posterior predictive and prior predictive checks.
@@ -156,10 +196,11 @@ plt.show()
 # Plotting density of posterior predictive and prior predictive
 az.plot_density(
     data=[data.posterior_predictive, data.prior_predictive],
-    shade=.9,
+    shade=.2,
     var_names=[r'$\mu_{thickness}$'],
     data_labels=["Posterior Predictive", "Prior Predictive"],
     colors=[default_red, default_blue],
+    hdi_prob=0.90
 )
 plt.show()
 
@@ -175,10 +216,22 @@ p.create_figure(figsize=(9, 5), joyplot=False, marginal=True, likelihood=False)
 p.plot_marginal(
     var_names=['$\\mu_{top}$', '$\\mu_{bottom}$'],
     plot_trace=False,
-    credible_interval=.70,
+    credible_interval=1,
     kind='kde',
-    marginal_kwargs={"bw": 1}
+    marginal_kwargs={
+            "bw": "scott"
+    },
+    joint_kwargs={
+            'contour'          : True,
+            'pcolormesh_kwargs': {}
+    },
+    joint_kwargs_prior={
+            'contour'          : False,
+            'pcolormesh_kwargs': {}
+    }
+
 )
+
 plt.show()
 
 # %%
@@ -190,18 +243,25 @@ plt.show()
 # Visualizing the posterior distributions
 p = PlotPosterior(data)
 p.create_figure(figsize=(9, 6), joyplot=True)
-iteration = 99
+iteration = 450
 p.plot_posterior(
     prior_var=['$\\mu_{top}$', '$\\mu_{bottom}$'],
     like_var=['$\\mu_{top}$', '$\\mu_{bottom}$'],
     obs='y_{thickness}',
     iteration=iteration,
     marginal_kwargs={
-        "credible_interval": 0.94,
-        'marginal_kwargs': {"bw": 1},
-        'joint_kwargs': {"bw": 1}
-    }
-)
+            "credible_interval" : .9999,
+            'marginal_kwargs'   : {},
+            'joint_kwargs'      : {
+                    "bw"               : 1,
+                    'contour'          : True,
+                    'pcolormesh_kwargs': {}
+            },
+            "joint_kwargs_prior": {
+                    'contour'          : False,
+                    'pcolormesh_kwargs': {}
+            }
+    })
 plt.show()
 
 # %%

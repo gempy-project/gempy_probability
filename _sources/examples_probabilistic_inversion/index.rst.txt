@@ -32,7 +32,30 @@ Make sure to replace the links with actual hyperlinks if you're using a platform
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="Based on GemPy3_Tutorial_XX_fault_gravity.ipynb">
+
+.. only:: html
+
+  .. image:: /examples_probabilistic_inversion/images/thumb/sphx_glr_3.1_FW_gravity_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_examples_probabilistic_inversion_3.1_FW_gravity.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">GemPy 3: gravity inversion for normal fault model</div>
     </div>
+
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /examples_probabilistic_inversion/3.1_FW_gravity
 
 
 
