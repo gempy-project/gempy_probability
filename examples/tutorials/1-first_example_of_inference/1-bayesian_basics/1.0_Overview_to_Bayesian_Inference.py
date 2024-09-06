@@ -66,19 +66,19 @@ pyro.set_rng_seed(4003)
 # %%
 def model(distributions_family, data):
     if distributions_family == "normal_distribution":
-        param_mean = pyro.param(r'$\mu_{prior}$', torch.tensor(2.07))
-        param_std = pyro.param(r'$\sigma_{prior}$', torch.tensor(0.07), constraint=dist.constraints.positive)
-        mu = pyro.sample(r'$\mu_{likelihood}$', dist.Normal(param_mean, param_std))
+        param_mean = pyro.param('$\\mu_{prior}$', torch.tensor(2.07))
+        param_std = pyro.param('$\\sigma_{prior}$', torch.tensor(0.07), constraint=dist.constraints.positive)
+        mu = pyro.sample('$\\mu_{likelihood}$', dist.Normal(param_mean, param_std))
     elif distributions_family in "uniform_distribution":
-        param_low = pyro.param(r'$\mu_{prior}$', torch.tensor(0))
-        param_high = pyro.param(r'$\sigma_{prior}$', torch.tensor(10))
-        mu = pyro.sample(r'$\mu_{likelihood}$', dist.Uniform(param_low, param_high))
+        param_low = pyro.param('$\\mu_{prior}$', torch.tensor(0))
+        param_high = pyro.param('$\\sigma_{prior}$', torch.tensor(10))
+        mu = pyro.sample('$\\mu_{likelihood}$', dist.Uniform(param_low, param_high))
     else:
         raise ValueError("distributions_family must be either 'normal_distribution' or 'uniform_distribution'")
-    param_concentration = pyro.param(r'$\alpha_{prior}$', torch.tensor(0.3), constraint=dist.constraints.positive)
-    param_rate = pyro.param(r'$\beta_{prior}$', torch.tensor(3), constraint=dist.constraints.positive)
+    param_concentration = pyro.param('$\\alpha_{prior}$', torch.tensor(0.3), constraint=dist.constraints.positive)
+    param_rate = pyro.param('$\beta_{prior}$', torch.tensor(3), constraint=dist.constraints.positive)
     
-    sigma = pyro.sample(r'$\sigma_{likelihood}$', dist.Gamma(param_concentration, param_rate))
+    sigma = pyro.sample('$\\sigma_{likelihood}$', dist.Gamma(param_concentration, param_rate))
     y = pyro.sample('$y$', dist.Normal(mu, sigma), obs=data)
     return y
 
@@ -112,8 +112,9 @@ plt.show()
 # %%
 # Next:
 # =====
-# - One Observation: (:doc:`1.1_Intro_to_Bayesian_Inference`)
+
 # - Several Observations: (:doc:`1.2_Intro_to_Bayesian_Inference`)
+# - One Observation: (:doc:`1.1_Intro_to_Bayesian_Inference`)
 
 # %%
 # License
