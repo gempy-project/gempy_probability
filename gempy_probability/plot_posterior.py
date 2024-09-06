@@ -182,7 +182,14 @@ class PlotPosterior:
         y = plotters[1][3].flatten()[:iteration]
 
         for val, ax, rotate in ((x, self.ax_hist_x, False), (y, self.ax_hist_y, True)):
-            plot_dist(val, textsize=self.xt_labelsize, rotated=rotate, ax=ax, **marginal_kwargs)
+            plot_dist(
+                values=val,
+                kind="kde",
+                textsize=self.xt_labelsize,
+                rotated=rotate,
+                ax=ax,
+                **marginal_kwargs
+            )
 
     def plot_joint_posterior(self, plotters, iteration=-1, kind='kde', **joint_kwargs):
 
@@ -252,13 +259,22 @@ class PlotPosterior:
             pair_y = pair_y_array[i]
             self.axjoin.plot(pair_x, pair_y, linewidth=1, alpha=alpha_val, color='k')
 
-    def plot_marginal(self, var_names=None, data=None, iteration=-1,
-                      group='both',
-                      plot_trace=True, n_iterations=20,
-                      kind='kde',
-                      coords=None, credible_interval=.98,
-                      marginal_kwargs=None, marginal_kwargs_prior=None,
-                      joint_kwargs=None, joint_kwargs_prior=None):
+    def plot_marginal(
+            self,
+            var_names=None,
+            data=None,
+            iteration=-1,
+            group='both',
+            plot_trace=True,
+            n_iterations=20,
+            kind='kde',
+            coords=None,
+            credible_interval=.98,
+            marginal_kwargs=None,
+            marginal_kwargs_prior=None,
+            joint_kwargs=None,
+            joint_kwargs_prior=None
+    ):
 
         self.axjoin.clear()
         self.ax_hist_x.clear()
@@ -356,8 +372,11 @@ class PlotPosterior:
             x_min, x_max, y_min, y_max = self.compute_hpd(plotters_prior, credible_interval=credible_interval)
 
         else:
-            x_min, x_max, y_min, y_max = self.compute_hpd(plotters, iteration=iteration,
-                                                          credible_interval=credible_interval)
+            x_min, x_max, y_min, y_max = self.compute_hpd(
+                plotters=plotters,
+                iteration=iteration,
+                credible_interval=credible_interval
+            )
         if plot_trace is True:
             self.plot_trace(plotters, iteration, n_iterations)
 

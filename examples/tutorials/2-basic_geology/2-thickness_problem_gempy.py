@@ -32,7 +32,7 @@ data_path = os.path.abspath('../')
 
 
 # %%
-# Define a function for plotting geological settings with wells
+# Define a function for plotting geological settings with wells 
 def plot_geo_setting_well(geo_model):
     """
     This function plots the geological settings along with the well locations.
