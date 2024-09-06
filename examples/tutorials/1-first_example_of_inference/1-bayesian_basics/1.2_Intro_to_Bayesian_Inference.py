@@ -105,7 +105,8 @@ plt.show()
 # The following animation shows how the distribution evolves during sampling. Darker colors 
 # represent an increase in likelihood as the Markov Chain explores the probability space.
 # 
-# ![joyplot animated](images/joyplot_2.gif "segment")
+# .. image:: /_static/joyplot_2.gif
+#
 # Joint Probability
 # -----------------
 
@@ -135,13 +136,8 @@ plt.show()
 # ----------------
 # Below is a gif of the first 100 samples, starting from the 10th iteration:
 #  
-# ![sampling](images/sampling_2.gif "segment")
-# 
-# A sped-up version of the full sampling process shows how the chain converges over time, 
-# becoming more "educated" about the distribution with each iteration:
-# 
-# ![sampling](images/sampling.gif "segment")
-
+#
+# .. image:: /_static/sampling_2.gif
 
 # %% 
 # Full Plot

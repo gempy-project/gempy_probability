@@ -35,6 +35,7 @@ plt.show()
 # %%
 # Prior Space
 # """"""""""
+
 # %%
 p = PlotPosterior(az_data)
 
