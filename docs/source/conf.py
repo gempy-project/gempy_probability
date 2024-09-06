@@ -39,7 +39,6 @@ if not os.path.exists(pyvista.FIGURE_PATH):
 
 sys.path.insert(0, os.path.abspath('.'))
 
-
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -50,41 +49,41 @@ sys.path.insert(0, os.path.abspath('.'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.doctest',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.todo',
-    'sphinx.ext.coverage',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages',
-    'sphinx.ext.napoleon',
-    'sphinx_gallery.gen_gallery',
+        'sphinx.ext.autodoc',
+        'sphinx.ext.autosummary',
+        'sphinx.ext.doctest',
+        'sphinx.ext.intersphinx',
+        'sphinx.ext.todo',
+        'sphinx.ext.coverage',
+        'sphinx.ext.mathjax',
+        'sphinx.ext.viewcode',
+        'sphinx.ext.githubpages',
+        'sphinx.ext.napoleon',
+        'sphinx_gallery.gen_gallery',
 ]
 
 if run_intersphinx := False:  # Example configuration for intersphinx: refer to the Python standard library.
     intersphinx_mapping = {
-        'numpy'     : ('https://numpy.org/doc/stable/', None),
-        'python'    : ('https://docs.python.org/{.major}'.format(sys.version_info), None),
-        'matplotlib': ('https://matplotlib.org/stable/', None),
-        'mayavi'    : ('http://docs.enthought.com/mayavi/mayavi', None),
-        'sklearn'   : ('https://scikit-learn.org/stable', None),
-        'skimage'   : ('https://scikit-image.org/docs/dev/', None),
-        'pyvista'   : ('https://docs.pyvista.org/', None),
-        'sphinx'    : ('https://www.sphinx-doc.org/en/master/', None),
-        'pandas'    : ('https://pandas.pydata.org/pandas-docs/stable/', None),
+            'numpy'     : ('https://numpy.org/doc/stable/', None),
+            'python'    : ('https://docs.python.org/{.major}'.format(sys.version_info), None),
+            'matplotlib': ('https://matplotlib.org/stable/', None),
+            'mayavi'    : ('http://docs.enthought.com/mayavi/mayavi', None),
+            'sklearn'   : ('https://scikit-learn.org/stable', None),
+            'skimage'   : ('https://scikit-image.org/docs/dev/', None),
+            'pyvista'   : ('https://docs.pyvista.org/', None),
+            'sphinx'    : ('https://www.sphinx-doc.org/en/master/', None),
+            'pandas'    : ('https://pandas.pydata.org/pandas-docs/stable/', None),
     }
 
 napoleon_google_docstring = True
 
 autodoc_default_options = {
-    'autodoc_default_flags': ['members'],
-    'members'              : None,
-    'member-order'         : 'bysource',
-    'special-members'      : '__init__',
-    'undoc-members'        : True,
-    'exclude-members'      : '__weakref__'
+        'autodoc_default_flags': ['members'],
+        'members'              : None,
+        'member-order'         : 'bysource',
+        'special-members'      : '__init__',
+        'undoc-members'        : True,
+        'exclude-members'      : '__weakref__'
 }
 autosummary_generate = True
 autosummary_imported_members = True
@@ -108,7 +107,7 @@ copyright = u'2023-{}, Gempy Probability Developers'.format(year)
 
 with open(os.path.join(os.path.dirname(__file__), '../../AUTHORS.rst'), 'r') as f:
     author = f.read()
-    
+
 version = gempy.__version__  # The short X.Y version.
 release = gempy.__version__  # The full version, including alpha/beta/rc tags.
 today_fmt = '%d %B %Y'
@@ -120,7 +119,7 @@ language = 'en'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['_build', '**.ipynb_checkpoints', 'Thumbs.db', '.DS_Store', 'errors.txt', '../test' ]
+exclude_patterns = ['_build', '**.ipynb_checkpoints', 'Thumbs.db', '.DS_Store', 'errors.txt', '../test']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -133,36 +132,38 @@ linkcheck_timeout = 500
 
 # * -- Sphinx Gallery Options
 sphinx_gallery_conf = {
-    # path to your examples scripts
-    "examples_dirs"          : [
-        "../../examples/tutorials/0-intro",
-        "../../examples/tutorials/1-first_example_of_inference",
-        "../../examples/tutorials/2-basic_geology",
-        "../../examples/tutorials/3-probabilistic_inversion",
-        "../../examples/utils",
-    ],
-    # path where to save gallery generated examples
-    "gallery_dirs"           : [
-        "examples_intro",
-        "examples_first_example_of_inference",
-        "examples_basic_geology",
-        "examples_probabilistic_inversion",
-        "examples_utils",
-    ],
-    "filename_pattern": r"\.py",
-    "download_all_examples"  : False,  # Remove the "Download all examples" button from the top level gallery
-    "within_subsection_order": FileNameSortKey,  # Sort gallery example by file name instead of number of lines (default)
-    "backreferences_dir"     : 'gen_modules/backreferences',  # directory where function granular galleries are stored
-    "doc_module"             : ("gempy", "gempy_viewer", 'numpy', 'pandas', 'matplotlib'),  # Modules for which function level galleries are created.  In
-    "image_scrapers"         : ('pyvista', 'matplotlib'),
-    'first_notebook_cell'    : ("%matplotlib inline\n"
-                                "from pyvista import set_plot_theme\n"
-                                "set_plot_theme('document')"),
-    'reference_url'          : {
-        'gempy': None,  # The module you locally document uses None
-        'numpy': 'https://numpy.org/doc/stable/'
-    },
-    "nested_sections"        : False,
+        # path to your examples scripts
+        "examples_dirs"          : [
+                "../../examples/tutorials/0-intro",
+                "../../examples/tutorials/1-first_example_of_inference",
+                "../../examples/tutorials/2-basic_geology",
+                "../../examples/tutorials/3-probabilistic_inversion",
+                "../../examples/utils",
+        ],
+        # path where to save gallery generated examples
+        "gallery_dirs"           : [
+                "examples_intro",
+                "examples_first_example_of_inference",
+                "examples_basic_geology",
+                "examples_probabilistic_inversion",
+                "examples_utils",
+        ],
+
+        'ignore_pattern': r'__init__\.py',
+        "filename_pattern"       : r"\.py",
+        "download_all_examples"  : False,  # Remove the "Download all examples" button from the top level gallery
+        "within_subsection_order": FileNameSortKey,  # Sort gallery example by file name instead of number of lines (default)
+        "backreferences_dir"     : 'gen_modules/backreferences',  # directory where function granular galleries are stored
+        "doc_module"             : ("gempy", "gempy_viewer", 'numpy', 'pandas', 'matplotlib'),  # Modules for which function level galleries are created.  In
+        "image_scrapers"         : ('pyvista', 'matplotlib'),
+        'first_notebook_cell'    : ("%matplotlib inline\n"
+                                    "from pyvista import set_plot_theme\n"
+                                    "set_plot_theme('document')"),
+        'reference_url'          : {
+                'gempy': None,  # The module you locally document uses None
+                'numpy': 'https://numpy.org/doc/stable/'
+        },
+        "nested_sections"        : False,
 }
 
 # endregion
@@ -175,16 +176,16 @@ sphinx_gallery_conf = {
 
 html_theme = 'alabaster'
 html_theme_options = {
-    'github_user'     : 'gempy-project',
-    'github_repo'     : 'gempy',
-    'github_type'     : 'star',
-    'logo'            : 'logos/gempy.png',
-    'logo_name'       : False,
-    'travis_button'   : False,
-    'page_width'      : '1200px',
-    'fixed_sidebar'   : False,
-    'show_related'    : True,
-    'sidebar_collapse': True,
+        'github_user'     : 'gempy-project',
+        'github_repo'     : 'gempy',
+        'github_type'     : 'star',
+        'logo'            : 'logos/gempy.png',
+        'logo_name'       : False,
+        'travis_button'   : False,
+        'page_width'      : '1200px',
+        'fixed_sidebar'   : False,
+        'show_related'    : True,
+        'sidebar_collapse': True,
 }
 
 # Custom sidebar templates, maps document names to template names.

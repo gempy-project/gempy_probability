@@ -1,11 +1,3 @@
-"""
-Example of a Pyro model and inference
-=====================================
-
-"""
-# sphinx_gallery_thumbnail_number = -1
-
-# %%
 import pyro
 import pyro.distributions as dist
 from pyro.infer import MCMC, NUTS, Predictive

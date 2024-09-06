@@ -18,7 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from .._aux_functions.aux_funcs import plot_model_and_grav
+from .._aux_functions.aux_funcs_probabilistic_inversion import plot_model_and_grav
 
 # %% md
 ## Step 1: Model setup
