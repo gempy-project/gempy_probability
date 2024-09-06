@@ -47,7 +47,7 @@ p.create_figure(figsize=(9, 3), joyplot=False, marginal=False)
 p.plot_normal_likelihood(
     mean='$\\mu_{likelihood}$',
     std='$\\sigma_{likelihood}$',
-    obs= '$y$',
+    obs='$y$',
     iteration=-1,
     hide_bell=True
 )
@@ -71,9 +71,9 @@ p.create_figure(figsize=(9, 3), joyplot=False, marginal=False)
 p.plot_normal_likelihood(
     mean='$\\mu_{likelihood}$',
     std='$\\sigma_{likelihood}$',
-    obs= '$y$',
+    obs='$y$',
     iteration=-1,
-    hide_bell=True
+    hide_bell=False
 )
 p.likelihood_axes.set_xlim(1.70, 2.40)
 p.likelihood_axes.xaxis.set_major_formatter(StrMethodFormatter('{x:,.2f}'))
@@ -133,7 +133,7 @@ plt.show()
 # Sampling Process
 # ----------------
 # Below is a gif of the first 100 samples, starting from the 10th iteration:
-# 
+#  
 # ![sampling](images/sampling_2.gif "segment")
 # 
 # A sped-up version of the full sampling process shows how the chain converges over time, 
@@ -141,6 +141,30 @@ plt.show()
 # 
 # ![sampling](images/sampling.gif "segment")
 
+
+# %% 
+# Full Plot
+# ---------
+
+# %%
+p3 = PlotPosterior(az_data)
+p3.create_figure(figsize=(15, 13), joyplot=True, marginal=True, likelihood=True, n_samples=19)
+p3.plot_posterior(
+    prior_var=['$\\mu_{likelihood}$', '$\\sigma_{likelihood}$'], 
+    like_var=['$\\mu_{likelihood}$', '$\\sigma_{likelihood}$'],
+    obs='$y$',
+    iteration=-5,
+    marginal_kwargs={
+            'plot_trace'       : True,
+            'credible_interval': .95,
+            'kind'             : 'kde',
+            "joint_kwargs"     : {
+                    'contour'          : True,
+                    'pcolormesh_kwargs': {}
+            },
+    }
+)
+plt.show()
 
 # %%
 # License

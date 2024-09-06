@@ -227,17 +227,14 @@ class PlotPosterior:
             self.axjoin._grid(False)
 
     def plot_trace(self, plotters, iteration, n_iterations=20):
-        
-        
+
         i_0 = np.max([0, (iteration - n_iterations)])
         # Raise error if there are not enough iterations
         if plotters[0][3].flatten().shape[0] < n_iterations:
             raise ValueError(
                 "Number of iterations must be greater than n_iterations."
             )
-        
-    
-        
+
         theta1_val_trace = plotters[0][3].flatten()[i_0:iteration + 1]
         theta2_val_trace = plotters[1][3].flatten()[i_0:iteration + 1]
 
@@ -248,7 +245,7 @@ class PlotPosterior:
         self.axjoin.plot(theta1_val, theta2_val, 'bo', ms=6, color='k')
 
         # Plot a trace of n_iterations
-        pair_x_array = np.vstack( (theta1_val_trace[:-1], theta1_val_trace[1:])).T
+        pair_x_array = np.vstack((theta1_val_trace[:-1], theta1_val_trace[1:])).T
         pair_y_array = np.vstack((theta2_val_trace[:-1], theta2_val_trace[1:])).T
         for i, pair_x in enumerate(pair_x_array):
             alpha_val = i / pair_x_array.shape[0]
@@ -423,8 +420,8 @@ class PlotPosterior:
         draw_posterior_predictive = data.posterior_predictive[{'chain': 0, 'draw': iteration}]
 
         # TODO: WE are going to have to handle the case of null posterior predictive
-        draw = xarray.merge(( draw_posterior, draw_posterior_predictive ), compat='override')
-        
+        draw = xarray.merge((draw_posterior, draw_posterior_predictive), compat='override')
+
         draw_mu = draw[mean] if type(mean) is str else mean
         draw_sigma = draw[std] if type(std) is str else std
         obs = data.observed_data[obs] if type(obs) is str else obs
@@ -447,7 +444,6 @@ class PlotPosterior:
 
         nor_l = stats.norm.pdf(thick_vals, loc=thick_model, scale=thick_std)
         self.set_likelihood_limits(nor_l.max(), 'y_max')
-
         likelihood_at_observation = stats.norm.pdf(observation, loc=thick_model, scale=thick_std)
 
         if color == 'auto':
@@ -466,7 +462,7 @@ class PlotPosterior:
         # This is the bell
         hide_bell: bool = kwargs.get('hide_bell', False)
         hide_lines: bool = kwargs.get('hide_lines', False)
-        
+
         if not hide_bell:
             self.likelihood_axes.plot(thick_vals, nor_l, color='#7eb1bc', linewidth=.5)
             self.likelihood_axes.fill_between(thick_vals, nor_l, 0, color=color_fill, alpha=.8)
@@ -483,8 +479,6 @@ class PlotPosterior:
         observation_size = self.xt_labelsize * 3
 
         self.likelihood_axes.scatter(observation, np.zeros_like(observation), s=observation_size, c='#DA8886')
-        self.likelihood_axes.set_ylim(y_min, y_max)
-        self.likelihood_axes.set_xlim(thick_min, thick_max)
 
         # Make the axis sexy
         self.likelihood_axes.spines['bottom'].set_position(('data', 0.0))
@@ -496,10 +490,7 @@ class PlotPosterior:
         self.likelihood_axes.set_xlabel('Observations')
         self.likelihood_axes.set_title('Likelihood')
 
-        # self.likelihood_axes.set_ylim(y_min, y_max)
         self.likelihood_axes.set_xlim(thick_min, thick_max)
-
-        # self.likelihood_axes.set_xlim(self.x_min_like, self.x_max_like)
         self.likelihood_axes.set_ylim(0, self.y_max_like)
 
         return self.likelihood_axes, self.cmap_l
@@ -537,15 +528,15 @@ class PlotPosterior:
             data=get_coords(
                 convert_to_dataset(data, group="posterior"),
                 coords
-           ),
+            ),
             var_names=var_names,
             combined=True
-        ) )
+        ))
         plotters_in_posterior_predictive = list(xarray_var_iter(
             data=get_coords(data.posterior_predictive, coords),
             var_names=var_names,
             combined=True
-        ) )
+        ))
 
         plotters = plotters_in_posterior + plotters_in_posterior_predictive
 
@@ -643,7 +634,11 @@ class PlotPosterior:
         if joy_kwargs is None:
             joy_kwargs = {}
 
-        self.plot_marginal(prior_var, iteration=iteration, **marginal_kwargs)
+        self.plot_marginal(
+            prior_var,
+            iteration=iteration,
+            **marginal_kwargs
+        )
         _, cmap = self.plot_normal_likelihood(
             like_var[0],
             like_var[1],
