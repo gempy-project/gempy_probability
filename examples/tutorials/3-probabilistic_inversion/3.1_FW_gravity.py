@@ -1,5 +1,6 @@
 """
-# GemPy 3: gravity inversion for normal fault model
+GemPy 3: gravity inversion for normal fault model
+=================================================
 
 Based on `GemPy3_Tutorial_XX_fault_gravity.ipynb`
 
