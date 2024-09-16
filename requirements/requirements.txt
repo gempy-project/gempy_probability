@@ -2,3 +2,4 @@ gempy~=2024.2.0
 torch
 arviz
 pyro-ppl
+seaborn
