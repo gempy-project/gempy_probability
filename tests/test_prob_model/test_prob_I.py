@@ -20,6 +20,9 @@ def test_basic_gempy_I() -> None:
         )
     )
 
+    # TODO: Make this a more elegant way 
+    BackendTensor.change_backend_gempy(engine_backend=gp.data.AvailableBackends.PYTORCH)
+    
     # TODO: Convert this into an options preset
     geo_model.interpolation_options.uni_degree = 0
     geo_model.interpolation_options.mesh_extraction = False
@@ -37,8 +40,6 @@ def test_basic_gempy_I() -> None:
     assert geo_model.grid.values.shape[0] == 100, "Custom grid should have 100 cells"
     gp.compute_model(gempy_model=geo_model)
 
-    # TODO: Make this a more elegant way 
-    BackendTensor.change_backend_gempy(engine_backend=gp.data.AvailableBackends.PYTORCH)
 
     normal = dist.Normal(
         loc=(geo_model.surface_points_copy_transformed.xyz[0, 2]),
@@ -105,6 +106,9 @@ def _prob_run(geo_model: gp.data.GeoModel, prob_model: callable,
     data = az.from_pyro(posterior=mcmc, prior=prior, posterior_predictive=posterior_predictive)
     # endregion
 
+    if True: # * Save the arviz data
+        data.to_netcdf("arviz_data.nc")
+        
     az.plot_trace(data)
     plt.show()
     from gempy_probability.modules.plot.plot_posterior import default_red, default_blue
@@ -140,5 +144,3 @@ def _prob_run(geo_model: gp.data.GeoModel, prob_model: callable,
     print(f"Thickness mean: {posterior_thickness_mean}")
     print("MCMC convergence diagnostics:")
     print(f"Divergences: {float(data.sample_stats.diverging.sum())}")
-    print(f"Acceptance rate: {float(data.sample_stats.acceptance_rate.mean())}")
-    print(f"Mean tree depth: {float(data.sample_stats.mean_tree_depth.mean())}")
