@@ -3,6 +3,7 @@ import gempy as gp
 import gempy_engine
 import numpy as np
 
+
 def test_basic_gempy_I():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     data_path = os.path.abspath(os.path.join(current_dir, '..', '..', 'examples', 'tutorials', 'data'))
@@ -20,7 +21,6 @@ def test_basic_gempy_I():
     geo_model.interpolation_options.uni_degree = 0
     geo_model.interpolation_options.mesh_extraction = False
     geo_model.interpolation_options.sigmoid_slope = 1100.
-
 
     x_loc = 6000
     y_loc = 0
@@ -70,12 +70,16 @@ def test_basic_gempy_I():
     import matplotlib.pyplot as plt
 
     from gempy_probability.modules.model_definition.model_examples import model
-    prior = Predictive(model, num_samples=50)(geo_model, sp_coords_copy, y_obs_list)
-    
+    predictive = Predictive(
+        model=model,
+        num_samples=50
+    )
+
+    prior = predictive(geo_model, sp_coords_copy, y_obs_list)
+
     data = az.from_pyro(prior=prior)
     az.plot_trace(data.prior)
     plt.show()
-
 
     from pyro.infer import NUTS
     from pyro.infer import MCMC
@@ -91,7 +95,6 @@ def test_basic_gempy_I():
     )
     mcmc = MCMC(nuts_kernel, num_samples=200, warmup_steps=50, disable_validation=False)
     mcmc.run(geo_model, sp_coords_copy, y_obs_list)
-
 
     posterior_samples = mcmc.get_samples()
     posterior_predictive = Predictive(model, posterior_samples)(geo_model, sp_coords_copy, y_obs_list)
