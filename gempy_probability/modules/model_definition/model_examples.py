@@ -26,12 +26,16 @@ def model(geo_model: gempy.core.data.GeoModel, normal, y_obs_list):
 
     # * Update the model with the new top layer's location
     interpolation_input = interpolation_input_from_structural_frame(geo_model)
-    interpolation_input.surface_points.sp_coords = torch.index_put(
-        input=interpolation_input.surface_points.sp_coords,
-        indices=(torch.tensor([0]), torch.tensor([2])),
-        values=mu_top
-    )
-    # interpolation_input.surface_points.sp_coords[0, 2] = mu_top
+    
+    if False: # ?? I need to figure out if we need the index_put or not
+        indices__ = (torch.tensor([0]), torch.tensor([2]))  # * This has to be Tensors
+        interpolation_input.surface_points.sp_coords = torch.index_put(
+            input=interpolation_input.surface_points.sp_coords,
+            indices=indices__,
+            values=mu_top
+        )
+    else:
+        interpolation_input.surface_points.sp_coords[0, 2] = mu_top
 
     # endregion
 
@@ -50,13 +54,14 @@ def model(geo_model: gempy.core.data.GeoModel, normal, y_obs_list):
     thickness = simulated_well.sum()
     pyro.deterministic(
         name=r'$\mu_{thickness}$',
-        value=thickness.detach()
+        value=thickness.detach() # * This is only for az to track progress
     )
 
     # endregion
 
+    posterior_dist_normal = dist.Normal(thickness, 25)
     y_thickness = pyro.sample(
         name=r'$y_{thickness}$',
-        fn=dist.Normal(thickness, 25),
+        fn=posterior_dist_normal,
         obs=y_obs_list
     )
