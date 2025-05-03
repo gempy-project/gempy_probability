@@ -35,22 +35,16 @@ def test_basic_gempy_I() -> None:
         engine_config=gp.data.GemPyEngineConfig(backend=gp.data.AvailableBackends.numpy)
     )
 
-    # TODO: This is the part that has to go to a function no question
-    # Probabilistic Geomodeling with Pyro
-    # -----------------------------------
-    # In this section, we introduce a probabilistic approach to geological modeling.
-    # By using Pyro, a probabilistic programming language, we define a model that integrates
-    # geological data with uncertainty quantification.
-
-    from gempy_engine.core.data.interpolation_input import InterpolationInput
     from gempy_engine.core.backend_tensor import BackendTensor
-    from gempy.modules.data_manipulation.engine_factory import interpolation_input_from_structural_frame
-
-    interpolation_input_copy: InterpolationInput = interpolation_input_from_structural_frame(geo_model)
-    sp_coords_copy = interpolation_input_copy.surface_points.sp_coords
-    # Change the backend to PyTorch for probabilistic modeling
     BackendTensor.change_backend_gempy(engine_backend=gp.data.AvailableBackends.PYTORCH)
+    
+    import pyro.distributions as dist
+    import torch
 
+    normal = dist.Normal(
+        loc=(geo_model.surface_points_copy_transformed.xyz[0, 2]),
+        scale=torch.tensor(0.1, dtype=torch.float64)
+    )
     # %%
     # Running Prior Sampling and Visualization
     # ----------------------------------------
@@ -75,7 +69,7 @@ def test_basic_gempy_I() -> None:
         num_samples=50
     )
 
-    prior = predictive(geo_model, sp_coords_copy, y_obs_list)
+    prior = predictive(geo_model, normal, y_obs_list)
 
     data = az.from_pyro(prior=prior)
     az.plot_trace(data.prior)
@@ -100,7 +94,7 @@ def test_basic_gempy_I() -> None:
         warmup_steps=50,
         disable_validation=False
     )
-    mcmc.run(geo_model, sp_coords_copy, y_obs_list)
+    mcmc.run(geo_model, normal, y_obs_list)
 
     posterior_samples = mcmc.get_samples()
     
@@ -109,7 +103,7 @@ def test_basic_gempy_I() -> None:
         posterior_samples=posterior_samples
     )
 
-    posterior_predictive = posterior_predictive_fn(geo_model, sp_coords_copy, y_obs_list)
+    posterior_predictive = posterior_predictive_fn(geo_model, normal, y_obs_list)
 
     data = az.from_pyro(posterior=mcmc, prior=prior, posterior_predictive=posterior_predictive)
     az.plot_trace(data)

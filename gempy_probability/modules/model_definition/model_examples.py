@@ -7,7 +7,7 @@ import pyro.distributions as dist
 import torch
 
 
-def model(geo_model: gempy.core.data.GeoModel, sp_coords_copy, y_obs_list):
+def model(geo_model: gempy.core.data.GeoModel, normal, y_obs_list):
     """
     This Pyro model represents the probabilistic aspects of the geological model.
     It defines a prior distribution for the top layer's location and 
@@ -15,11 +15,6 @@ def model(geo_model: gempy.core.data.GeoModel, sp_coords_copy, y_obs_list):
     """
     # Define prior for the top layer's location:
     # region Prior definition
-    prior_mean = sp_coords_copy[0, 2]
-    normal = dist.Normal(
-        loc=prior_mean,
-        scale=torch.tensor(0.1, dtype=torch.float64)
-    )
 
     mu_top = pyro.sample(
         name=r'$\mu_{top}$',
