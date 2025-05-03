@@ -11,7 +11,7 @@ import numpy as np
 import pyro
 import torch
 
-from gempy_probability.plot_posterior import PlotPosterior
+from gempy_probability.modules.plot.plot_posterior import PlotPosterior
 from _aux_func import infer_model
 
 az.style.use("arviz-doc")

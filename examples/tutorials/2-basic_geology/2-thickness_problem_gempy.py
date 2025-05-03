@@ -22,7 +22,7 @@ from gempy_engine.core.backend_tensor import BackendTensor
 import arviz as az
 
 from gempy_engine.core.data.interpolation_input import InterpolationInput
-from gempy_probability.plot_posterior import default_red, default_blue
+from gempy_probability.modules.plot.plot_posterior import default_red, default_blue
 
 # sphinx_gallery_thumbnail_number = -1
 

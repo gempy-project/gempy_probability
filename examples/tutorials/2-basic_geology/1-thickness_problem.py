@@ -41,7 +41,7 @@ import pyro.distributions as dist
 import torch
 from pyro.infer import MCMC, NUTS, Predictive
 from pyro.infer.inspect import get_dependencies
-from gempy_probability.plot_posterior import PlotPosterior, default_red, default_blue
+from gempy_probability.modules.plot.plot_posterior import PlotPosterior, default_red, default_blue
 import arviz as az
 
 az.style.use("arviz-doc")
