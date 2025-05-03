@@ -18,7 +18,7 @@ def model(geo_model: gempy.core.data.GeoModel, sp_coords_copy, y_obs_list):
     prior_mean = sp_coords_copy[0, 2]
     normal = dist.Normal(
         loc=prior_mean,
-        scale=torch.tensor(0.02, dtype=torch.float64)
+        scale=torch.tensor(0.1, dtype=torch.float64)
     )
 
     mu_top = pyro.sample(
@@ -36,6 +36,7 @@ def model(geo_model: gempy.core.data.GeoModel, sp_coords_copy, y_obs_list):
         indices=(torch.tensor([0]), torch.tensor([2])),
         values=mu_top
     )
+    # interpolation_input.surface_points.sp_coords[0, 2] = mu_top
 
     # endregion
 
@@ -61,6 +62,6 @@ def model(geo_model: gempy.core.data.GeoModel, sp_coords_copy, y_obs_list):
 
     y_thickness = pyro.sample(
         name=r'$y_{thickness}$',
-        fn=dist.Normal(thickness, 50),
+        fn=dist.Normal(thickness, 25),
         obs=y_obs_list
     )

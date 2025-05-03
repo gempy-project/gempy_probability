@@ -4,7 +4,7 @@ import gempy_engine
 import numpy as np
 
 
-def test_basic_gempy_I():
+def test_basic_gempy_I() -> None:
     current_dir = os.path.dirname(os.path.abspath(__file__))
     data_path = os.path.abspath(os.path.join(current_dir, '..', '..', 'examples', 'tutorials', 'data'))
     geo_model = gp.create_geomodel(
@@ -84,6 +84,7 @@ def test_basic_gempy_I():
     from pyro.infer import NUTS
     from pyro.infer import MCMC
     from pyro.infer.autoguide import init_to_mean
+
     pyro.primitives.enable_validation(is_validate=True)
     nuts_kernel = NUTS(
         model,
@@ -93,11 +94,42 @@ def test_basic_gempy_I():
         max_tree_depth=10,
         init_strategy=init_to_mean
     )
-    mcmc = MCMC(nuts_kernel, num_samples=200, warmup_steps=50, disable_validation=False)
+    mcmc = MCMC(
+        kernel=nuts_kernel,
+        num_samples=200,
+        warmup_steps=50,
+        disable_validation=False
+    )
     mcmc.run(geo_model, sp_coords_copy, y_obs_list)
 
     posterior_samples = mcmc.get_samples()
-    posterior_predictive = Predictive(model, posterior_samples)(geo_model, sp_coords_copy, y_obs_list)
+    
+    posterior_predictive_fn = Predictive(
+        model=model,
+        posterior_samples=posterior_samples
+    )
+
+    posterior_predictive = posterior_predictive_fn(geo_model, sp_coords_copy, y_obs_list)
+
     data = az.from_pyro(posterior=mcmc, prior=prior, posterior_predictive=posterior_predictive)
     az.plot_trace(data)
+    plt.show()
+
+    from gempy_probability.modules.plot.plot_posterior import default_red, default_blue
+    az.plot_density(
+        data=[data.posterior_predictive, data.prior_predictive],
+        shade=.9,
+        var_names=[r'$\mu_{thickness}$'],
+        data_labels=["Posterior Predictive", "Prior Predictive"],
+        colors=[default_red, default_blue],
+    )
+    plt.show()
+
+    az.plot_density(
+        data=[data, data.prior],
+        shade=.9,
+        hdi_prob=.99,
+        data_labels=["Posterior", "Prior"],
+        colors=[default_red, default_blue],
+    )
     plt.show()
