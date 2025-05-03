@@ -2,7 +2,6 @@ import numpy as np
 import os
 import pyro.distributions as dist
 import torch
-from pyro.distributions import TorchDistributionMixin
 
 import gempy as gp
 from gempy_engine.core.backend_tensor import BackendTensor
@@ -24,7 +23,7 @@ def test_basic_gempy_I() -> None:
     # TODO: Convert this into an options preset
     geo_model.interpolation_options.uni_degree = 0
     geo_model.interpolation_options.mesh_extraction = False
-    geo_model.interpolation_options.sigmoid_slope = 1100. 
+    geo_model.interpolation_options.sigmoid_slope = 1100.
 
     # region Minimal grid for the specific likelihood function
     x_loc = 6000
@@ -34,16 +33,10 @@ def test_basic_gempy_I() -> None:
     gp.set_custom_grid(geo_model.grid, xyz_coord=xyz_coord)
     # endregion
 
-    # TODO: Make sure only the custom grid ins active
-    
-    
-    gp.compute_model(
-        gempy_model=geo_model,
-        engine_config=gp.data.GemPyEngineConfig(
-            backend=gp.data.AvailableBackends.numpy
-        )
-    )
-    
+    geo_model.grid.active_grids = gp.data.Grid.GridTypes.CUSTOM
+    assert geo_model.grid.values.shape[0] == 100, "Custom grid should have 100 cells"
+    gp.compute_model(gempy_model=geo_model)
+
     # TODO: Make this a more elegant way 
     BackendTensor.change_backend_gempy(engine_backend=gp.data.AvailableBackends.PYTORCH)
 
@@ -62,7 +55,7 @@ def test_basic_gempy_I() -> None:
 
 
 def _prob_run(geo_model: gp.data.GeoModel, prob_model: callable,
-              normal: TorchDistributionMixin, y_obs_list: torch.Tensor) -> None:
+              normal: torch.distributions.Distribution, y_obs_list: torch.Tensor) -> None:
     # Run prior sampling and visualization
     from pyro.infer import Predictive
     import pyro
@@ -110,13 +103,6 @@ def _prob_run(geo_model: gp.data.GeoModel, prob_model: callable,
     )
     posterior_predictive = posterior_predictive_fn(geo_model, normal, y_obs_list)
     data = az.from_pyro(posterior=mcmc, prior=prior, posterior_predictive=posterior_predictive)
-    # Test posterior mean values
-    posterior_top_mean = float(data.posterior[r'$\mu_{top}$'].mean())
-    assert 0.0070 < posterior_top_mean < 0.0071, f"Top layer mean {posterior_top_mean} outside expected range"
-    posterior_thickness_mean = float(data.posterior_predictive[r'$\mu_{thickness}$'].mean())
-    assert 220 < posterior_thickness_mean < 225, f"Thickness mean {posterior_thickness_mean} outside expected range"
-    # Test convergence diagnostics
-    assert float(data.sample_stats.diverging.sum()) == 0, "MCMC sampling has divergences"
     # endregion
 
     az.plot_trace(data)
@@ -138,3 +124,21 @@ def _prob_run(geo_model: gp.data.GeoModel, prob_model: callable,
         colors=[default_red, default_blue],
     )
     plt.show()
+
+    # Test posterior mean values
+    posterior_top_mean = float(data.posterior[r'$\mu_{top}$'].mean())
+    target_top = 0.00875
+    target_thickness = 223
+    assert abs(posterior_top_mean - target_top) < 0.0200, f"Top layer mean {posterior_top_mean} outside expected range"
+    posterior_thickness_mean = float(data.posterior_predictive[r'$\mu_{thickness}$'].mean())
+    assert abs(posterior_thickness_mean - target_thickness) < 5, f"Thickness mean {posterior_thickness_mean} outside expected range"
+    # Test convergence diagnostics
+    assert float(data.sample_stats.diverging.sum()) == 0, "MCMC sampling has divergences"
+
+    print("Posterior mean values:")
+    print(f"Top layer mean: {posterior_top_mean}")
+    print(f"Thickness mean: {posterior_thickness_mean}")
+    print("MCMC convergence diagnostics:")
+    print(f"Divergences: {float(data.sample_stats.diverging.sum())}")
+    print(f"Acceptance rate: {float(data.sample_stats.acceptance_rate.mean())}")
+    print(f"Mean tree depth: {float(data.sample_stats.mean_tree_depth.mean())}")

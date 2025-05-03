@@ -1,3 +1,4 @@
+import gempy as gp
 import gempy.core.data
 import gempy_engine
 from gempy.modules.data_manipulation.engine_factory import interpolation_input_from_structural_frame
@@ -27,13 +28,14 @@ def model(geo_model: gempy.core.data.GeoModel, normal, y_obs_list):
     # * Update the model with the new top layer's location
     interpolation_input = interpolation_input_from_structural_frame(geo_model)
     
-    if False: # ?? I need to figure out if we need the index_put or not
+    if True: # ?? I need to figure out if we need the index_put or not
         indices__ = (torch.tensor([0]), torch.tensor([2]))  # * This has to be Tensors
-        interpolation_input.surface_points.sp_coords = torch.index_put(
+        new_tensor: torch.Tensor = torch.index_put(
             input=interpolation_input.surface_points.sp_coords,
             indices=indices__,
             values=mu_top
         )
+        interpolation_input.surface_points.sp_coords = new_tensor
     else:
         interpolation_input.surface_points.sp_coords[0, 2] = mu_top
 
@@ -50,18 +52,29 @@ def model(geo_model: gempy.core.data.GeoModel, normal, y_obs_list):
     )
 
     # Compute and observe the thickness of the geological layer
-    simulated_well = geo_model.solutions.octrees_output[0].last_output_center.custom_grid_values
-    thickness = simulated_well.sum()
-    pyro.deterministic(
-        name=r'$\mu_{thickness}$',
-        value=thickness.detach() # * This is only for az to track progress
-    )
+    model_solutions: gp.data.Solutions = geo_model.solutions
+    thickness = _likelihood(model_solutions)
 
     # endregion
 
     posterior_dist_normal = dist.Normal(thickness, 25)
+    
+    # * This is used automagically by pyro to compute the log-probability
     y_thickness = pyro.sample(
         name=r'$y_{thickness}$',
         fn=posterior_dist_normal,
         obs=y_obs_list
     )
+
+
+def _likelihood(model_solutions: gp.data.Solutions) -> torch.Tensor:
+    """
+    This function computes the thickness of the geological layer.
+    """
+    simulated_well = model_solutions.octrees_output[0].last_output_center.custom_grid_values
+    thickness = simulated_well.sum()
+    pyro.deterministic(
+        name=r'$\mu_{thickness}$',
+        value=thickness.detach()  # * This is only for az to track progress
+    )
+    return thickness
