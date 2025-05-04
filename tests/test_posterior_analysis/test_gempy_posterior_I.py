@@ -22,7 +22,7 @@ def test_gempy_posterior_I():
             path_to_surface_points=os.path.join(data_path, "2-layers", "2-layers_surface_points.csv")
         )
     )
-    
+
     BackendTensor.change_backend_gempy(engine_backend=gp.data.AvailableBackends.PYTORCH)
 
     geo_model.interpolation_options.uni_degree = 0
@@ -47,7 +47,7 @@ def test_gempy_posterior_I():
     xyz[:, 2] = posterior_top_mean_z
     world_coord = geo_model.input_transform.apply_inverse(xyz)
     i = 0
-    for i in range(0, 200, 5):
+    for i in np.linspace(0, 200, 20).astype(int):
         gp.modify_surface_points(
             geo_model=geo_model,
             slice=0,
@@ -71,8 +71,6 @@ def test_gempy_posterior_I():
         )
 
     p2d.fig.show()
-
-    pass
 
 
 def _plot_posterior(data):
