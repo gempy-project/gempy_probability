@@ -1,1 +1,2 @@
 from _apparent_thickness import apparent_thickness_likelihood
+from _gravity_inv import gravity_inversion_likelihood
