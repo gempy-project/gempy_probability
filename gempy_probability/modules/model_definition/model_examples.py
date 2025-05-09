@@ -9,7 +9,7 @@ import pyro.distributions as dist
 import torch
 
 
-def model(geo_model: gempy.core.data.GeoModel, normal, y_obs_list):
+def two_wells_prob_model_I(geo_model: gempy.core.data.GeoModel, normal, y_obs_list):
     """
     This Pyro model represents the probabilistic aspects of the geological model.
     It defines a prior distribution for the top layer's location and 

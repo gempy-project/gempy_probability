@@ -47,10 +47,10 @@ def test_basic_gempy_I() -> None:
         scale=torch.tensor(0.1, dtype=torch.float64)
     )
 
-    from gempy_probability.modules.model_definition.model_examples import model
+    from gempy_probability.modules.model_definition.model_examples import two_wells_prob_model_I
     _prob_run(
         geo_model=geo_model,
-        prob_model=model,
+        prob_model=two_wells_prob_model_I,
         normal=normal,
         y_obs_list=torch.tensor([200, 210, 190])
     )
