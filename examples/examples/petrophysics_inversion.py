@@ -10,8 +10,8 @@ import numpy as np
 
 import gempy as gp
 import gempy_viewer as gpv
-from subsurface.modules.visualization import to_pyvista_line, to_pyvista_points
-from vector_geology.model_contructor.spremberg import generate_spremberg_model, get_spremberg_borehole_set, add_wells_plot
+
+from examples.examples._aux_func_petrophysics_inversion import get_spremberg_borehole_set, generate_spremberg_model
 
 # %%
 vertical_exaggeration = 3
