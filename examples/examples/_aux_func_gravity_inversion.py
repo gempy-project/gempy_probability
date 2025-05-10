@@ -1,6 +1,13 @@
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
+import numpy as np
+
+import gempy as gp
+import xarray as xr
+from vector_geology.model_building_functions import optimize_nuggets_for_group
+
+
 def calculate_scale_shift(a: np.ndarray, b: np.ndarray) -> tuple:
     # Reshape arrays for sklearn
     a_reshaped = a.reshape(-1, 1)
@@ -22,15 +29,8 @@ def gaussian_kernel(locations, length_scale, variance):
     locations = torch.tensor(locations.values)
     distance_squared = torch.cdist(locations, locations, p=2).pow(2)
     # Compute the covariance matrix using the Gaussian kernel
-    covariance_matrix = variance * torch.exp(-0.5 * distance_squared / length_scale**2)
+    covariance_matrix = variance * torch.exp(-0.5 * distance_squared / length_scale ** 2)
     return covariance_matrix
-
-
-import numpy as np
-
-import gempy as gp
-import xarray as xr
-from vector_geology.model_building_functions import optimize_nuggets_for_group
 
 
 def initialize_geo_model(structural_elements: list[gp.data.StructuralElement], extent: list[float],

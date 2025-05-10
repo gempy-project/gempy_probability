@@ -1,4 +1,3 @@
-
 """
 Probabilistic Inversion Example: Geological Model
 --------------------------------------------------
@@ -22,12 +21,12 @@ from pyro.infer import MCMC, NUTS, Predictive
 import gempy as gp
 import gempy_engine
 import gempy_viewer as gpv
+
+from examples.examples._aux_func_gravity_inversion import calculate_scale_shift, gaussian_kernel, initialize_geo_model, setup_geophysics 
+from examples.examples._aux_func_gravity_inversion_II import process_file
+
 from gempy_engine.core.backend_tensor import BackendTensor
 from gempy_probability.modules.plot.plot_posterior import default_red, default_blue
-from vector_geology.bayesian_helpers import calculate_scale_shift, gaussian_kernel
-from vector_geology.model_1_builder import initialize_geo_model, setup_geophysics
-from vector_geology.omf_to_gempy import process_file
-
 
 # %%
 # Config
@@ -65,7 +64,7 @@ geo_model = initialize_geo_model(
     structural_elements=structural_elements,
     extent=(np.array(global_extent)),
     topography=(xr.open_dataset(os.path.join(path, "Topography.nc"))),
-    load_nuggets=True
+    load_nuggets=False
 )
 
 # %%
@@ -138,6 +137,7 @@ geo_model.geophysics_input = gp.data.GeophysicsInput(
     densities=prior_tensor,
 )
 
+
 # %%
 # Define the Pyro probabilistic model for inversion
 def model(y_obs_list, interpolation_input):
@@ -167,6 +167,7 @@ def model(y_obs_list, interpolation_input):
         fn=dist.MultivariateNormal(simulated_geophysics, covariance_matrix),
         obs=y_obs_list
     )
+
 
 # %%
 # Prepare observed data for Pyro model and optimize mesh settings
@@ -216,7 +217,7 @@ az.plot_density(
 )
 plt.show()
 
-#%%
+# %%
 az.plot_density(
     data=[data.posterior_predictive, data.prior_predictive],
     shade=.9,
