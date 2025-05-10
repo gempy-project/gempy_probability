@@ -12,9 +12,11 @@ from subsurface.modules.visualization import init_plotter, to_pyvista_points, to
 def generate_spremberg_model(
         borehole_set: ss.core.geological_formats.BoreholeSet,
         elements_to_gempy: dict[str, dict[str, str]], plot: bool = False) -> gp.data.GeoModel:
+    
     elements: list[gp.data.StructuralElement] = gp.structural_elements_from_borehole_set(
         borehole_set=borehole_set,
-        elements_dict=elements_to_gempy
+        elements_dict=elements_to_gempy,
+        group_by="component lith"
     )
 
     group = gp.data.StructuralGroup(

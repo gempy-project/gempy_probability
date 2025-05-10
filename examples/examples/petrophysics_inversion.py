@@ -6,12 +6,16 @@ This example demonstrates...
 
 # sphinx_gallery_thumbnail_number = -1
 """
+import dotenv
 import numpy as np
 
 import gempy as gp
 import gempy_viewer as gpv
 
 from examples.examples._aux_func_petrophysics_inversion import get_spremberg_borehole_set, generate_spremberg_model
+from subsurface.modules.visualization import to_pyvista_line, to_pyvista_points
+
+dotenv.load_dotenv()
 
 # %%
 vertical_exaggeration = 3
