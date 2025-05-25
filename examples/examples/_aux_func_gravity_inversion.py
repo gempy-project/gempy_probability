@@ -1,5 +1,3 @@
-import numpy as np
-from sklearn.linear_model import LinearRegression
 
 import numpy as np
 
@@ -8,29 +6,6 @@ import xarray as xr
 from vector_geology.model_building_functions import optimize_nuggets_for_group
 
 
-def calculate_scale_shift(a: np.ndarray, b: np.ndarray) -> tuple:
-    # Reshape arrays for sklearn
-    a_reshaped = a.reshape(-1, 1)
-    b_reshaped = b.reshape(-1, 1)
-
-    # Linear regression
-    model = LinearRegression().fit(a_reshaped, b_reshaped)
-
-    # Get scale and shift
-    s = model.coef_[0][0]
-    c = model.intercept_[0]
-
-    return s, c
-
-
-def gaussian_kernel(locations, length_scale, variance):
-    import torch
-    # Compute the squared Euclidean distance between each pair of points
-    locations = torch.tensor(locations.values)
-    distance_squared = torch.cdist(locations, locations, p=2).pow(2)
-    # Compute the covariance matrix using the Gaussian kernel
-    covariance_matrix = variance * torch.exp(-0.5 * distance_squared / length_scale ** 2)
-    return covariance_matrix
 
 
 def initialize_geo_model(structural_elements: list[gp.data.StructuralElement], extent: list[float],
@@ -104,56 +79,6 @@ def initialize_geo_model(structural_elements: list[gp.data.StructuralElement], e
     geo_model.update_transform()
 
     return geo_model
-
-
-def optimize_nuggets_for_whole_project(geo_model: gp.data.GeoModel):
-    geo_model.interpolation_options.kernel_options.range = 0.7
-    geo_model.interpolation_options.kernel_options.c_o = 4
-    optimize_nuggets_for_group(
-        geo_model=geo_model,
-        structural_group=geo_model.structural_frame.get_group_by_name('Red'),
-        plot_evaluation=False,
-        plot_result=True
-    )
-    geo_model.interpolation_options.kernel_options.range = 2
-    geo_model.interpolation_options.kernel_options.c_o = 4
-    optimize_nuggets_for_group(
-        geo_model=geo_model,
-        structural_group=geo_model.structural_frame.get_group_by_name('Blue'),
-        plot_evaluation=False,
-        plot_result=False
-    )
-    if False:
-        optimize_nuggets_for_group(
-            geo_model=geo_model,
-            structural_group=geo_model.structural_frame.get_group_by_name('Green'),
-            plot_evaluation=False,
-            plot_result=True
-        )
-
-
-def apply_optimized_nuggets(geo_model: gp.data.GeoModel, loaded_nuggets_red, loaded_nuggets_blue, loaded_nuggets_green):
-    gp.modify_surface_points(
-        geo_model,
-        slice=None,
-        elements_names=[element.name for element in geo_model.structural_frame.get_group_by_name('Red').elements],
-        nugget=loaded_nuggets_red
-    )
-    if True:  # Ignore OB
-        gp.modify_surface_points(
-            geo_model,
-            slice=None,
-            elements_names=[element.name for element in geo_model.structural_frame.get_group_by_name('Blue').elements],
-            nugget=loaded_nuggets_blue
-        )
-    if False:
-        gp.modify_surface_points(
-            geo_model,
-            slice=None,
-            elements_names=[element.name for element in geo_model.structural_frame.get_group_by_name('Green').elements],
-            nugget=loaded_nuggets_green
-        )
-
 
 def setup_geophysics(env_path: str, geo_model: gp.data.GeoModel):
     import pandas as pd

@@ -60,12 +60,16 @@ for filename in os.listdir(path):
 # %%
 # Configure GemPy for geological modeling with PyTorch backend
 BackendTensor.change_backend_gempy(engine_backend=gp.data.AvailableBackends.PYTORCH, dtype="float64")
+
 geo_model = initialize_geo_model(
     structural_elements=structural_elements,
     extent=(np.array(global_extent)),
     topography=(xr.open_dataset(os.path.join(path, "Topography.nc"))),
     load_nuggets=False
 )
+
+# TODO: Here is where we are setting the nuggets
+# * ============================================
 
 # %%
 # Setup geophysics configuration for the model
