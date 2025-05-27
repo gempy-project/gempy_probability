@@ -4,6 +4,7 @@ from pyro.distributions import Distribution
 from typing import Callable, Dict
 
 import gempy as gp
+from gempy_engine.core.backend_tensor import BackendTensor
 from gempy_probability.modules.forwards import run_gempy_forward
 
 GemPyPyroModel = Callable[[gp.data.GeoModel, torch.Tensor], None]
@@ -13,7 +14,7 @@ def make_gempy_pyro_model(
         *,
         priors: Dict[str, Distribution],
         set_interp_input_fn: Callable[
-            [Dict[str, torch.Tensor], gp.data.GeoModel],
+            [Dict[str, Distribution], gp.data.GeoModel],
             gp.data.InterpolationInput
         ],
         likelihood_fn: Callable[[gp.data.Solutions], Distribution],
@@ -95,6 +96,9 @@ def make_gempy_pyro_model(
     >>> # Now this can be used with Predictive or MCMC directly:
     >>> #   Predictive(pyro_model, num_samples=100)(geo_model, obs_tensor)
     """
+
+    BackendTensor.change_backend_gempy(engine_backend=gp.data.AvailableBackends.PYTORCH)
+    
     def model(geo_model: gp.data.GeoModel, obs_data: torch.Tensor):
         # 1) Sample from the user‐supplied priors
         samples: Dict[str, torch.Tensor] = {}

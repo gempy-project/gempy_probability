@@ -33,7 +33,7 @@ def test_prob_model_factory() -> None:
     # TODO: Convert this into an options preset
     geo_model.interpolation_options.uni_degree = 0
     geo_model.interpolation_options.mesh_extraction = False
-    geo_model.interpolation_options.sigmoid_slope = 1100.
+    geo_model.interpolation_options.sigmoid_slope = 1100
 
     # region Minimal grid for the specific likelihood function
     x_loc = 6000
@@ -77,7 +77,6 @@ def modify_z_for_surface_point1(
         geo_model: gp.data.GeoModel,
 ) -> InterpolationInput:
     # TODO: We can make a factory for this type of functions
-    
     prior_key = r'$\mu_{top}$'
     
     from gempy.modules.data_manipulation import interpolation_input_from_structural_frame
@@ -104,16 +103,13 @@ def _prob_run(geo_model: gp.data.GeoModel, prob_model: gpp.GemPyPyroModel,
     from pyro.infer.autoguide import init_to_mean
 
     # region prior sampling
-    predictive = Predictive(
-        model=prob_model,
-        num_samples=50
+    prior = gpp.run_predictive(
+        prob_model=prob_model,
+        geo_model=geo_model,
+        y_obs_list=y_obs_list,
+        n_samples=50,
+        plot_trace=True
     )
-    prior = predictive(geo_model, y_obs_list)
-    # print("Number of interpolations: ", geo_model.counter)
-
-    data = az.from_pyro(prior=prior)
-    az.plot_trace(data.prior)
-    plt.show()
 
     # endregion
 
@@ -184,3 +180,5 @@ def _prob_run(geo_model: gp.data.GeoModel, prob_model: gpp.GemPyPyroModel,
     print(f"Thickness mean: {posterior_thickness_mean}")
     print("MCMC convergence diagnostics:")
     print(f"Divergences: {float(data.sample_stats.diverging.sum())}")
+
+
