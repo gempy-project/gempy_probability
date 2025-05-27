@@ -4,29 +4,26 @@ Probabilistic Inversion Example: Geological Model
 
 This example demonstrates a probabilistic inversion of a geological model using Bayesian methods.
 """
-
+import numpy as np
 import os
-import time
 
 import arviz as az
-import numpy as np
+import dotenv
+import gempy_engine
+import gempy_viewer as gpv
 import pyro
 import pyro.distributions as dist
 import torch
-import xarray as xr
-from dotenv import dotenv_values
+from gempy_engine.core.backend_tensor import BackendTensor
 from matplotlib import pyplot as plt
 from pyro.infer import MCMC, NUTS, Predictive
 
 import gempy as gp
-import gempy_engine
-import gempy_viewer as gpv
-
-from examples.examples._aux_func_gravity_inversion import calculate_scale_shift, gaussian_kernel, initialize_geo_model, setup_geophysics 
-from examples.examples._aux_func_gravity_inversion_II import process_file
-
-from gempy_engine.core.backend_tensor import BackendTensor
+from examples.examples._aux_func_gravity_inversion import setup_geophysics
+from gempy_probability.modules.likelihoods.gravity_likelihoods import calculate_scale_shift, gaussian_kernel
 from gempy_probability.modules.plot.plot_posterior import default_red, default_blue
+
+dotenv.load_dotenv()
 
 # %%
 # Config
@@ -34,48 +31,18 @@ seed = 123456
 torch.manual_seed(seed)
 pyro.set_rng_seed(seed)
 
-# %%
-# Start the timer for benchmarking purposes
-start_time = time.time()
+model_path = os.getenv("PATH_TO_NUGGET_TEST_MODEL")
+model_file = os.path.join(model_path, "nugget_effect_optimization.gempy")
+geo_model = gp.API.load_model(model_file)
 
 # %%
-# Load necessary configuration and paths from environment variables
-config = dotenv_values()
-path = config.get("PATH_TO_MODEL_1_Subsurface")
-
-# %%
-# Initialize lists to store structural elements for the geological model
-structural_elements = []
-global_extent = None
-color_gen = gp.data.ColorsGenerator()
-
-# %%
-# Process each .nc file in the specified directory for model construction
-for filename in os.listdir(path):
-    base, ext = os.path.splitext(filename)
-    if ext == '.nc':
-        structural_element, global_extent = process_file(os.path.join(path, filename), global_extent, color_gen)
-        structural_elements.append(structural_element)
-
-# %%
-# Configure GemPy for geological modeling with PyTorch backend
-BackendTensor.change_backend_gempy(engine_backend=gp.data.AvailableBackends.PYTORCH, dtype="float64")
-
-geo_model = initialize_geo_model(
-    structural_elements=structural_elements,
-    extent=(np.array(global_extent)),
-    topography=(xr.open_dataset(os.path.join(path, "Topography.nc"))),
-    load_nuggets=False
-)
-
-# TODO: Here is where we are setting the nuggets
-# * ============================================
-
-# %%
+# Forward Gravity
+# ---------------
 # Setup geophysics configuration for the model
 geophysics_input = setup_geophysics(
     env_path="PATH_TO_MODEL_1_BOUGUER",
-    geo_model=geo_model
+    geo_model=geo_model,
+    densities=[2.61, 2.92, 3.1, 2.92, 2.61, 2.61, 2.61]
 )
 
 # %%
@@ -87,12 +54,13 @@ interpolation_options.kernel_options.compute_condition_number = True
 
 # %%
 # Compute the geological model
-sol = gp.compute_model(
+sol: gp.data.Solutions = gp.compute_model(
     gempy_model=geo_model,
     engine_config=gp.data.GemPyEngineConfig(
         backend=gp.data.AvailableBackends.PYTORCH,
         dtype='float64'
-    )
+    ),
+    validate_serialization=False # TODO: [ ] Validate this serialization
 )
 
 # %%
@@ -106,12 +74,11 @@ gempy_vista = gpv.plot_3d(
 
 # %%
 # Calculate and adapt the observed gravity data for model comparison
-grav = sol.gravity
-s, c = calculate_scale_shift(
-    a=geophysics_input["Bouguer_267_complete"].values,
-    b=(grav.detach().numpy())
+scale_factor, shift_term = calculate_scale_shift(
+    measured=geophysics_input["Bouguer_267_complete"].values,
+    simulated=sol.gravity.detach().numpy()
 )
-adapted_observed_grav = s * geophysics_input["Bouguer_267_complete"] + c
+adapted_observed_grav: np.dtype[float] = scale_factor * geophysics_input["Bouguer_267_complete"] + shift_term
 
 # %%
 # Plot the 2D gravity data for visualization
@@ -127,7 +94,10 @@ sc = plot2d.axes[0].scatter(
 plt.colorbar(sc, label="mGal")
 plt.show()
 
+
 # %%
+# Define Probabilistic model
+# --------------------------
 # Define hyperparameters for the Bayesian geological model
 length_scale_prior = torch.tensor(1_000.0)
 variance_prior = torch.tensor(25.0 ** 2)
@@ -141,6 +111,7 @@ geo_model.geophysics_input = gp.data.GeophysicsInput(
     densities=prior_tensor,
 )
 
+bar
 
 # %%
 # Define the Pyro probabilistic model for inversion
