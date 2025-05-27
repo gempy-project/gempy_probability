@@ -9,10 +9,12 @@ import gempy as gp
 from gempy_engine.core.backend_tensor import BackendTensor
 import gempy_probability as gpp
 from gempy_engine.core.data.interpolation_input import InterpolationInput
+from gempy_probability.core.samplers_data import NUTSConfig
 
 seed = 123456
 torch.manual_seed(seed)
 pyro.set_rng_seed(seed)
+
 
 def test_prob_model_factory() -> None:
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -71,19 +73,20 @@ def test_prob_model_factory() -> None:
         prob_model=pyro_gravity_model,
         y_obs_list=torch.tensor([200, 210, 190])
     )
-    
+
+
 def modify_z_for_surface_point1(
         samples: dict[str, Distribution],
         geo_model: gp.data.GeoModel,
 ) -> InterpolationInput:
     # TODO: We can make a factory for this type of functions
     prior_key = r'$\mu_{top}$'
-    
+
     from gempy.modules.data_manipulation import interpolation_input_from_structural_frame
     interp_input = interpolation_input_from_structural_frame(geo_model)
     new_tensor: torch.Tensor = torch.index_put(
         input=interp_input.surface_points.sp_coords,
-        indices=(torch.tensor([0]), torch.tensor([2])), # * This has to be Tensors
+        indices=(torch.tensor([0]), torch.tensor([2])),  # * This has to be Tensors
         values=(samples[prior_key])
     )
     interp_input.surface_points.sp_coords = new_tensor
@@ -103,7 +106,7 @@ def _prob_run(geo_model: gp.data.GeoModel, prob_model: gpp.GemPyPyroModel,
     from pyro.infer.autoguide import init_to_mean
 
     # region prior sampling
-    prior = gpp.run_predictive(
+    prior_inference = gpp.run_predictive(
         prob_model=prob_model,
         geo_model=geo_model,
         y_obs_list=y_obs_list,
@@ -114,30 +117,51 @@ def _prob_run(geo_model: gp.data.GeoModel, prob_model: gpp.GemPyPyroModel,
     # endregion
 
     # region inference
-    pyro.primitives.enable_validation(is_validate=True)
-    nuts_kernel = NUTS(
-        prob_model,
-        step_size=0.0085,
-        adapt_step_size=True,
-        target_accept_prob=0.9,
-        max_tree_depth=10,
-        init_strategy=init_to_mean
+    data = gpp.run_nuts_inference(
+        prob_model=prob_model,
+        geo_model=geo_model,
+        y_obs_list=y_obs_list,
+        config=NUTSConfig(
+            step_size=0.0085,
+            adapt_step_size=True,
+            target_accept_prob=0.9,
+            max_tree_depth=10,
+            init_strategy='auto',
+            num_samples=200,
+            warmup_steps=50,
+        ),
+        plot_trace=False,
+        run_posterior_predictive=True
     )
-    mcmc = MCMC(
-        kernel=nuts_kernel,
-        num_samples=200,
-        warmup_steps=50,
-        disable_validation=False
-    )
-    mcmc.run(geo_model, y_obs_list)
-    posterior_samples = mcmc.get_samples()
-    posterior_predictive_fn = Predictive(
-        model=prob_model,
-        posterior_samples=posterior_samples
-    )
-    posterior_predictive = posterior_predictive_fn(geo_model, y_obs_list)
-
-    data = az.from_pyro(posterior=mcmc, prior=prior, posterior_predictive=posterior_predictive)
+    # pyro.primitives.enable_validation(is_validate=True)
+    # nuts_kernel = NUTS(
+    #     prob_model,
+    #     step_size=0.0085,
+    #     adapt_step_size=True,
+    #     target_accept_prob=0.9,
+    #     max_tree_depth=10,
+    #     init_strategy=init_to_mean
+    # )
+    # mcmc = MCMC(
+    #     kernel=nuts_kernel,
+    #     num_samples=200,
+    #     warmup_steps=50,
+    #     disable_validation=False
+    # )
+    # mcmc.run(geo_model, y_obs_list)
+    # posterior_samples = mcmc.get_samples()
+    # posterior_predictive_fn = Predictive(
+    #     model=prob_model,
+    #     posterior_samples=posterior_samples
+    # )
+    # posterior_predictive = posterior_predictive_fn(geo_model, y_obs_list)
+    # 
+    # data = az.from_pyro(
+    #     posterior=mcmc,
+    #     # prior=prior.to_dict()["prior"],
+    #     posterior_predictive=posterior_predictive
+    # )
+    data.extend(prior_inference)
     # endregion
 
     # print("Number of interpolations: ", geo_model.counter)
@@ -149,7 +173,7 @@ def _prob_run(geo_model: gp.data.GeoModel, prob_model: gpp.GemPyPyroModel,
     plt.show()
     from gempy_probability.modules.plot.plot_posterior import default_red, default_blue
     az.plot_density(
-        data=[data.posterior_predictive, data.prior_predictive],
+        data=[data.posterior_predictive, data.prior],
         shade=.9,
         var_names=[r'$\mu_{thickness}$'],
         data_labels=["Posterior Predictive", "Prior Predictive"],
@@ -158,6 +182,15 @@ def _prob_run(geo_model: gp.data.GeoModel, prob_model: gpp.GemPyPyroModel,
     plt.show()
     az.plot_density(
         data=[data, data.prior],
+        shade=.9,
+        hdi_prob=.99,
+        data_labels=["Posterior", "Prior"],
+        colors=[default_red, default_blue],
+    )
+    plt.show()
+
+    az.plot_density(
+        data=[data.posterior_predictive, data.prior],
         shade=.9,
         hdi_prob=.99,
         data_labels=["Posterior", "Prior"],
@@ -180,5 +213,3 @@ def _prob_run(geo_model: gp.data.GeoModel, prob_model: gpp.GemPyPyroModel,
     print(f"Thickness mean: {posterior_thickness_mean}")
     print("MCMC convergence diagnostics:")
     print(f"Divergences: {float(data.sample_stats.diverging.sum())}")
-
-

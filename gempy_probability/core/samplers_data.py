@@ -2,7 +2,7 @@ import dataclasses
 
 
 @dataclasses.dataclass
-class NUTS_Args:
+class NUTSConfig:
     step_size: float = 0.0085
     adapt_step_size: bool = True
     target_accept_prob: float = 0.9
