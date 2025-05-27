@@ -45,7 +45,7 @@ def two_wells_prob_model_I(geo_model: gempy.core.data.GeoModel, normal, y_obs_li
 
     # region Forward model computation
     
-    geo_model.counter +=1
+    # geo_model.counter +=1
 
     # * Compute the geological model
     geo_model.solutions = gempy_engine.compute_model(
