@@ -1,14 +1,15 @@
 import gempy as gp
-import gempy.core.data
 import gempy_engine
 from gempy.modules.data_manipulation import interpolation_input_from_structural_frame
-from ..likelihoods import apparent_thickness_likelihood
 
 import pyro
+from pyro import distributions as dist
 import torch
 
+from gempy_probability.modules.likelihoods._apparent_thickness import apparent_thickness_likelihood
 
-def two_wells_prob_model_I(geo_model: gempy.core.data.GeoModel, normal, y_obs_list):
+
+def two_wells_prob_model_I(geo_model: gp.data.GeoModel, normal, y_obs_list):
     """
     This Pyro model represents the probabilistic aspects of the geological model.
     It defines a prior distribution for the top layer's location and 

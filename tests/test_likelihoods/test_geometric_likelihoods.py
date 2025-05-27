@@ -5,7 +5,7 @@ import gempy as gp
 import gempy_viewer as gpv
 from gempy.core.data.grid_modules import CustomGrid
 from gempy_engine.core.backend_tensor import BackendTensor
-from gempy_probability.modules.likelihoods import apparent_thickness_likelihood_II
+from gempy_probability.modules.likelihoods._apparent_thickness import apparent_thickness_likelihood_II
 
 
 def test_gempy_posterior_I():

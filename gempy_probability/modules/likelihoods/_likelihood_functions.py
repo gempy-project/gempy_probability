@@ -1,7 +1,6 @@
-import torch
 import pyro.distributions as dist
 import gempy as gp
-from . import apparent_thickness_likelihood
+from ._apparent_thickness import apparent_thickness_likelihood
 
 
 def gravity_likelihood(geo_model: gp.data.Solutions):

@@ -60,12 +60,10 @@ def test_prob_model_factory() -> None:
             )
     }
 
-    from gempy_probability.modules.likelihoods._likelihood_functions import thickness_likelihood
-    
     pyro_gravity_model = gpp.make_gempy_pyro_model(
         priors=model_priors,
         set_interp_input_fn=modify_z_for_surface_point1,
-        likelihood_fn=thickness_likelihood,
+        likelihood_fn=gpp.likelihoods.thickness_likelihood,
         obs_name="obs_gravity"
     )
 
@@ -79,6 +77,8 @@ def modify_z_for_surface_point1(
         samples: dict[str, Distribution],
         geo_model: gp.data.GeoModel,
 ) -> InterpolationInput:
+    # TODO: We can make a factory for this type of functions
+    
     prior_key = r'$\mu_{top}$'
     
     from gempy.modules.data_manipulation import interpolation_input_from_structural_frame
