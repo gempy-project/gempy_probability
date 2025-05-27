@@ -101,20 +101,20 @@ def _prob_run(geo_model: gp.data.GeoModel, prob_model: callable,
         warmup_steps=50,
         disable_validation=False
     )
-    mcmc.run(geo_model, normal, y_obs_list)
+    mcmc.run(geo_model, y_obs_list)
     posterior_samples = mcmc.get_samples()
     posterior_predictive_fn = Predictive(
         model=prob_model,
         posterior_samples=posterior_samples
     )
-    posterior_predictive = posterior_predictive_fn(geo_model, normal, y_obs_list)
+    posterior_predictive = posterior_predictive_fn(geo_model, y_obs_list)
 
     data = az.from_pyro(posterior=mcmc, prior=prior, posterior_predictive=posterior_predictive)
     # endregion
 
     # print("Number of interpolations: ", geo_model.counter)
 
-    if True:  # * Save the arviz data
+    if False:  # * Save the arviz data
         data.to_netcdf("arviz_data.nc")
 
     az.plot_trace(data)

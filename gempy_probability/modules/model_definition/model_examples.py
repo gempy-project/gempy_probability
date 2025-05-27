@@ -79,13 +79,17 @@ import pyro.distributions as dist
 # 1) Define your priors
 gravity_priors = {
         # e.g. density contrast of layer index 3
-        "mu_density": dist.Normal(2.62, 0.5)
+        # "mu_density": dist.Normal(2.62, 0.5),
+        "mu_thickness":  dist.Normal(
+            loc=torch.tensor(0.0487, dtype=torch.float64),
+            scale=torch.tensor(0.1, dtype=torch.float64)
+        )
 }
 
 # 2) Wrap your forward pass into a small fn
 def run_gempy_forward(samples, geo_model):
     
-    mu_top = samples["mu_density"]
+    mu_top = samples["mu_thickness"]
 
     interp_input = interpolation_input_from_structural_frame(geo_model)
     
