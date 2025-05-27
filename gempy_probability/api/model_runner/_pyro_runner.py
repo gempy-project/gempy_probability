@@ -1,25 +1,14 @@
-import numpy as np
-import os
-import pyro
-import pyro.distributions as dist
-import torch
-from arviz import InferenceData
-from pyro.distributions import Distribution
-
-import gempy as gp
-from gempy_engine.core.backend_tensor import BackendTensor
-import gempy_probability as gpp
-from gempy_engine.core.data.interpolation_input import InterpolationInput
-from pyro.infer import Predictive
-import pyro
 import arviz as az
 import matplotlib.pyplot as plt
-
-from pyro.infer import NUTS
+import torch
 from pyro.infer import MCMC
+from pyro.infer import NUTS
+from pyro.infer import Predictive
 from pyro.infer.autoguide import init_to_mean
 
-from gempy_probability.core.samplers_data import NUTSConfig
+import gempy as gp
+import gempy_probability as gpp
+from ...core.samplers_data import NUTSConfig
 
 
 def run_predictive(prob_model: gpp.GemPyPyroModel, geo_model: gp.data.GeoModel, 

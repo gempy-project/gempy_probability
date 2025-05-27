@@ -4,10 +4,12 @@ import pyro
 import pyro.distributions as dist
 import torch
 from pyro.distributions import Distribution
+import arviz as az
+import matplotlib.pyplot as plt
 
 import gempy as gp
-from gempy_engine.core.backend_tensor import BackendTensor
 import gempy_probability as gpp
+from gempy_engine.core.backend_tensor import BackendTensor
 from gempy_engine.core.data.interpolation_input import InterpolationInput
 from gempy_probability.core.samplers_data import NUTSConfig
 
@@ -28,9 +30,6 @@ def test_prob_model_factory() -> None:
             path_to_surface_points=os.path.join(data_path, "2-layers", "2-layers_surface_points.csv")
         )
     )
-
-    # TODO: Make this a more elegant way 
-    BackendTensor.change_backend_gempy(engine_backend=gp.data.AvailableBackends.PYTORCH)
 
     # TODO: Convert this into an options preset
     geo_model.interpolation_options.uni_degree = 0
@@ -65,14 +64,35 @@ def test_prob_model_factory() -> None:
         priors=model_priors,
         set_interp_input_fn=modify_z_for_surface_point1,
         likelihood_fn=gpp.likelihoods.thickness_likelihood,
-        obs_name="obs_gravity"
+        obs_name="wells_thickness"
     )
 
-    _prob_run(
+    data: az.InferenceData = _prob_run(
         geo_model=geo_model,
         prob_model=pyro_gravity_model,
         y_obs_list=torch.tensor([200, 210, 190])
     )
+
+    if False:  # * Save the arviz data
+        data.to_netcdf("arviz_data.nc")
+
+    _plot(data)
+
+    # Test posterior mean values
+    posterior_top_mean = float(data.posterior[r'$\mu_{top}$'].mean())
+    target_top = 0.00875
+    target_thickness = 223
+    assert abs(posterior_top_mean - target_top) < 0.0200, f"Top layer mean {posterior_top_mean} outside expected range"
+    posterior_thickness_mean = float(data.posterior_predictive[r'$\mu_{thickness}$'].mean())
+    assert abs(posterior_thickness_mean - target_thickness) < 5, f"Thickness mean {posterior_thickness_mean} outside expected range"
+    # Test convergence diagnostics
+    assert float(data.sample_stats.diverging.sum()) == 0, "MCMC sampling has divergences"
+
+    print("Posterior mean values:")
+    print(f"Top layer mean: {posterior_top_mean}")
+    print(f"Thickness mean: {posterior_thickness_mean}")
+    print("MCMC convergence diagnostics:")
+    print(f"Divergences: {float(data.sample_stats.diverging.sum())}")
 
 
 def modify_z_for_surface_point1(
@@ -87,23 +107,15 @@ def modify_z_for_surface_point1(
     new_tensor: torch.Tensor = torch.index_put(
         input=interp_input.surface_points.sp_coords,
         indices=(torch.tensor([0]), torch.tensor([2])),  # * This has to be Tensors
-        values=(samples[prior_key])
-    )
+        values=(samples[prior_key]
+        )
     interp_input.surface_points.sp_coords = new_tensor
     return interp_input
 
 
 def _prob_run(geo_model: gp.data.GeoModel, prob_model: gpp.GemPyPyroModel,
-              y_obs_list: torch.Tensor) -> None:
+              y_obs_list: torch.Tensor) -> az.InferenceData:
     # Run prior sampling and visualization
-    from pyro.infer import Predictive
-    import pyro
-    import arviz as az
-    import matplotlib.pyplot as plt
-
-    from pyro.infer import NUTS
-    from pyro.infer import MCMC
-    from pyro.infer.autoguide import init_to_mean
 
     # region prior sampling
     prior_inference = gpp.run_predictive(
@@ -133,42 +145,12 @@ def _prob_run(geo_model: gp.data.GeoModel, prob_model: gpp.GemPyPyroModel,
         plot_trace=False,
         run_posterior_predictive=True
     )
-    # pyro.primitives.enable_validation(is_validate=True)
-    # nuts_kernel = NUTS(
-    #     prob_model,
-    #     step_size=0.0085,
-    #     adapt_step_size=True,
-    #     target_accept_prob=0.9,
-    #     max_tree_depth=10,
-    #     init_strategy=init_to_mean
-    # )
-    # mcmc = MCMC(
-    #     kernel=nuts_kernel,
-    #     num_samples=200,
-    #     warmup_steps=50,
-    #     disable_validation=False
-    # )
-    # mcmc.run(geo_model, y_obs_list)
-    # posterior_samples = mcmc.get_samples()
-    # posterior_predictive_fn = Predictive(
-    #     model=prob_model,
-    #     posterior_samples=posterior_samples
-    # )
-    # posterior_predictive = posterior_predictive_fn(geo_model, y_obs_list)
-    # 
-    # data = az.from_pyro(
-    #     posterior=mcmc,
-    #     # prior=prior.to_dict()["prior"],
-    #     posterior_predictive=posterior_predictive
-    # )
     data.extend(prior_inference)
+    return data
     # endregion
 
-    # print("Number of interpolations: ", geo_model.counter)
 
-    if False:  # * Save the arviz data
-        data.to_netcdf("arviz_data.nc")
-
+def _plot(data):
     az.plot_trace(data)
     plt.show()
     from gempy_probability.modules.plot.plot_posterior import default_red, default_blue
@@ -188,7 +170,6 @@ def _prob_run(geo_model: gp.data.GeoModel, prob_model: gpp.GemPyPyroModel,
         colors=[default_red, default_blue],
     )
     plt.show()
-
     az.plot_density(
         data=[data.posterior_predictive, data.prior],
         shade=.9,
@@ -197,19 +178,3 @@ def _prob_run(geo_model: gp.data.GeoModel, prob_model: gpp.GemPyPyroModel,
         colors=[default_red, default_blue],
     )
     plt.show()
-
-    # Test posterior mean values
-    posterior_top_mean = float(data.posterior[r'$\mu_{top}$'].mean())
-    target_top = 0.00875
-    target_thickness = 223
-    assert abs(posterior_top_mean - target_top) < 0.0200, f"Top layer mean {posterior_top_mean} outside expected range"
-    posterior_thickness_mean = float(data.posterior_predictive[r'$\mu_{thickness}$'].mean())
-    assert abs(posterior_thickness_mean - target_thickness) < 5, f"Thickness mean {posterior_thickness_mean} outside expected range"
-    # Test convergence diagnostics
-    assert float(data.sample_stats.diverging.sum()) == 0, "MCMC sampling has divergences"
-
-    print("Posterior mean values:")
-    print(f"Top layer mean: {posterior_top_mean}")
-    print(f"Thickness mean: {posterior_thickness_mean}")
-    print("MCMC convergence diagnostics:")
-    print(f"Divergences: {float(data.sample_stats.diverging.sum())}")
