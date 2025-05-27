@@ -1,10 +1,18 @@
 import numpy as np
 import os
+import pyro
 import pyro.distributions as dist
 import torch
+from pyro.distributions import Distribution
 
 import gempy as gp
 from gempy_engine.core.backend_tensor import BackendTensor
+import gempy_probability as gpp
+from gempy_engine.core.data.interpolation_input import InterpolationInput
+
+seed = 123456
+torch.manual_seed(seed)
+pyro.set_rng_seed(seed)
 
 def test_prob_model_factory() -> None:
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -44,23 +52,48 @@ def test_prob_model_factory() -> None:
     )
     BackendTensor.change_backend_gempy(engine_backend=gp.data.AvailableBackends.PYTORCH)
 
-    normal = dist.Normal(
-        loc=(geo_model.surface_points_copy_transformed.xyz[0, 2]),
-        scale=torch.tensor(0.1, dtype=torch.float64)
-    )
+    # 1) Define your priors
+    model_priors = {
+            r'$\mu_{top}$': dist.Normal(
+                loc=geo_model.surface_points_copy_transformed.xyz[0, 2],
+                scale=torch.tensor(0.1, dtype=torch.float64)
+            )
+    }
 
-    from gempy_probability.modules.model_definition.model_examples import two_wells_prob_model_I, pyro_gravity_model
+    from gempy_probability.modules.likelihoods._likelihood_functions import thickness_likelihood
+    
+    pyro_gravity_model = gpp.make_gempy_pyro_model(
+        priors=model_priors,
+        set_interp_input_fn=modify_z_for_surface_point1,
+        likelihood_fn=thickness_likelihood,
+        obs_name="obs_gravity"
+    )
 
     _prob_run(
         geo_model=geo_model,
         prob_model=pyro_gravity_model,
-        normal=normal,
         y_obs_list=torch.tensor([200, 210, 190])
     )
+    
+def modify_z_for_surface_point1(
+        samples: dict[str, Distribution],
+        geo_model: gp.data.GeoModel,
+) -> InterpolationInput:
+    prior_key = r'$\mu_{top}$'
+    
+    from gempy.modules.data_manipulation import interpolation_input_from_structural_frame
+    interp_input = interpolation_input_from_structural_frame(geo_model)
+    new_tensor: torch.Tensor = torch.index_put(
+        input=interp_input.surface_points.sp_coords,
+        indices=(torch.tensor([0]), torch.tensor([2])), # * This has to be Tensors
+        values=(samples[prior_key])
+    )
+    interp_input.surface_points.sp_coords = new_tensor
+    return interp_input
 
 
 def _prob_run(geo_model: gp.data.GeoModel, prob_model: callable,
-              normal: torch.distributions.Distribution, y_obs_list: torch.Tensor) -> None:
+              y_obs_list: torch.Tensor) -> None:
     # Run prior sampling and visualization
     from pyro.infer import Predictive
     import pyro
