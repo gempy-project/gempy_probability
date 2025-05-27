@@ -9,28 +9,110 @@ import gempy as gp
 
 def make_gempy_pyro_model(
         priors: Dict[str, Distribution],
-        set_interp_input_fn: Callable[..., gp.data.Solutions],
+        set_interp_input_fn: Callable[
+            [Dict[str, torch.Tensor], gp.data.GeoModel],
+            gp.data.InterpolationInput
+        ],
         likelihood_fn: Callable[[gp.data.Solutions], Distribution],
         obs_name: str = "obs"
-):
+) -> Callable[[gp.data.GeoModel, torch.Tensor], None]:
+    """
+    Factory to produce a Pyro model for GemPy forward simulations.
 
-    def model(geo_model, obs_data):
-        # 1) Sample each prior
-        samples = {}
+    This returns a `model(geo_model, obs_data)` function that you can hand
+    directly to Pyro's inference APIs (`Predictive`, `MCMC`, …).  Internally
+    the generated model does:
+
+      1. Samples each key/value in `priors` via `pyro.sample(name, dist)`.  
+      2. Calls `set_interp_input_fn(samples, geo_model)` to inject those samples
+         into a new `InterpolationInput`.  
+      3. Runs the GemPy forward solver with `run_gempy_forward(...)`.  
+      4. Wraps the resulting `Solutions` in `likelihood_fn(...)` to get a Pyro
+         distribution, then observes `obs_data` under that distribution.
+
+    Parameters
+    ----------
+    priors : Dict[str, Distribution]
+        A mapping from Pyro sample‐site names to Pyro Distribution objects
+        defining your prior beliefs over each parameter.
+    set_interp_input_fn : Callable[[samples, geo_model], InterpolationInput]
+        A user function which receives:
+          
+          * `samples` (Dict[str, Tensor]): the values drawn from your priors  
+          * `geo_model` (gempy.core.data.GeoModel): the base geological model  
+          
+        and must return a ready‐to‐use `InterpolationInput` for GemPy.
+    likelihood_fn : Callable[[Solutions], Distribution]
+        A function mapping the GemPy forward‐model output (`Solutions`)
+        to a Pyro Distribution representing the likelihood of the observed data.
+    obs_name : str, optional
+        The Pyro site name under which `obs_data` will be observed.
+        Defaults to `"obs"`.
+
+    Returns
+    -------
+    model : Callable[[GeoModel, Tensor], None]
+        A Pyro‐compatible model taking:
+
+          * `geo_model`: your GemPy GeoModel object  
+          * `obs_data`: a torch.Tensor of observations  
+
+        This function has no return value; it registers its random draws
+        via `pyro.sample`.
+
+    Example
+    -------
+    >>> import pyro.distributions as dist
+    >>> from gempy_probability import make_gempy_pyro_model
+    >>> from gempy.modules.data_manipulation import interpolation_input_from_structural_frame
+    >>> import gempy_probability
+    >>>
+    >>> # 1) Define a simple Normal prior on μ
+    >>> priors = {"μ": dist.Normal(0., 1.)}
+    >>>
+    >>> # 2) Function to inject μ into your interp-input
+    >>> def set_input(samples, gm):
+    ...     inp = interpolation_input_from_structural_frame(gm)
+    ...     inp.surface_points.sp_coords =  torch.index_put(
+    ...          input=inp.surface_points.sp_coords,
+    ...          indices=(torch.tensor([0]), torch.tensor([2])), # * This has to be Tensors
+    ...          values=(samples["μ"])
+    ...          )
+    ...     return inp
+    >>>
+    >>>
+    >>> # 4) Build the model
+    >>> pyro_model = make_gempy_pyro_model(
+    ...                 priors=priors,
+    ...                 set_interp_input_fn=set_input, 
+    ...                 likelihood_fn=gempy_probability.likelihoods.thickness_likelihood, 
+    ...                 obs_name="y")
+    >>>
+    >>>
+    >>> # Now this can be used with Predictive or MCMC directly:
+    >>> #   Predictive(pyro_model, num_samples=100)(geo_model, obs_tensor)
+    """
+    def model(geo_model: gp.data.GeoModel, obs_data: torch.Tensor):
+        # 1) Sample from the user‐supplied priors
+        samples: Dict[str, torch.Tensor] = {}
         for name, dist in priors.items():
             samples[name] = pyro.sample(name, dist)
 
-        # 3) Run your forward geological model
+        # 2) Build the new interpolation input
+        interp_input = set_interp_input_fn(samples, geo_model)
+
+        # 3) Run GemPy forward simulation
         simulated: gp.data.Solutions = run_gempy_forward(
-            interp_input=set_interp_input_fn(samples, geo_model), 
+            interp_input=interp_input,
             geo_model=geo_model
         )
 
-        # 4) Build likelihood and observe
+        # 4) Wrap in likelihood & observe
         lik_dist = likelihood_fn(simulated)
         pyro.sample(obs_name, lik_dist, obs=obs_data)
 
     return model
+
 
 
 def make_generic_pyro_model(
