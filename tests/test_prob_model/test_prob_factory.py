@@ -50,7 +50,6 @@ def test_prob_model_factory() -> None:
         gempy_model=geo_model,
         validate_serialization=False
     )
-    BackendTensor.change_backend_gempy(engine_backend=gp.data.AvailableBackends.PYTORCH)
 
     # 1) Define your priors
     model_priors = {
