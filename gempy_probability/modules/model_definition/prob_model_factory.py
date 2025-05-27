@@ -1,13 +1,16 @@
 import pyro
 import torch
-from typing import Callable, Dict
 from pyro.distributions import Distribution
+from typing import Callable, Dict
 
-from gempy_probability.modules.forwards import run_gempy_forward
 import gempy as gp
+from gempy_probability.modules.forwards import run_gempy_forward
+
+GemPyPyroModel = Callable[[gp.data.GeoModel, torch.Tensor], None]
 
 
 def make_gempy_pyro_model(
+        *,
         priors: Dict[str, Distribution],
         set_interp_input_fn: Callable[
             [Dict[str, torch.Tensor], gp.data.GeoModel],
@@ -15,7 +18,7 @@ def make_gempy_pyro_model(
         ],
         likelihood_fn: Callable[[gp.data.Solutions], Distribution],
         obs_name: str = "obs"
-) -> Callable[[gp.data.GeoModel, torch.Tensor], None]:
+) -> GemPyPyroModel:
     """
     Factory to produce a Pyro model for GemPy forward simulations.
 

@@ -59,7 +59,7 @@ def test_prob_model_factory() -> None:
             )
     }
 
-    pyro_gravity_model = gpp.make_gempy_pyro_model(
+    pyro_gravity_model: gpp.GemPyPyroModel = gpp.make_gempy_pyro_model(
         priors=model_priors,
         set_interp_input_fn=modify_z_for_surface_point1,
         likelihood_fn=gpp.likelihoods.thickness_likelihood,
@@ -91,7 +91,7 @@ def modify_z_for_surface_point1(
     return interp_input
 
 
-def _prob_run(geo_model: gp.data.GeoModel, prob_model: callable,
+def _prob_run(geo_model: gp.data.GeoModel, prob_model: gpp.GemPyPyroModel,
               y_obs_list: torch.Tensor) -> None:
     # Run prior sampling and visualization
     from pyro.infer import Predictive
