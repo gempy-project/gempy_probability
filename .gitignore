@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.nc
 
 # C extensions
 *.so
@@ -161,3 +162,4 @@ cython_debug/
 
 docs/build
 docs/source
+/gempy_probability/_version.py
