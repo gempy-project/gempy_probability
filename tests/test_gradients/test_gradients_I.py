@@ -9,7 +9,6 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
-import pytest
 
 import gempy as gp
 import gempy_engine
@@ -18,7 +17,9 @@ from gempy.modules.data_manipulation import interpolation_input_from_structural_
 from gempy_engine.core.backend_tensor import BackendTensor
 
 # Constants
-DATA_PATH = os.path.abspath('../../examples/tutorials/')
+current_file_dir = os.path.dirname(os.path.abspath(__file__))
+data_path = os.path.join(current_file_dir, '..', '..', 'examples', 'tutorials')
+DATA_PATH = os.path.abspath(data_path)
 SIGMOID_SLOPE = 1000
 MODEL_EXTENT = [0, 12000, -500, 500, 0, 4000]
 MODEL_RESOLUTION = np.array([10, 1, 10])

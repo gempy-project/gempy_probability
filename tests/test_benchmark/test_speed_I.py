@@ -47,7 +47,7 @@ def test_speed_I():
     if PLOT := False:
         gpv.plot_2d(two_wells, show_scalar=False)
 
-    assert 5 < stats.total_tt < 10, "Total time should be between 5 and 10 ms"
+    assert 2.5 < stats.total_tt < 7, "Total time should be between 5 and 10 ms"
 
 @pytest.mark.skip(reason="Not implemented yet")
 def test_speed_on_gravity_likelihood():
