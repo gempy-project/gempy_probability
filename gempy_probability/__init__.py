@@ -1,3 +1,1 @@
-import gempy
-
-__version__ = gempy.__version__
+from ._version import __version__

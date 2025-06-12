@@ -1,4 +1,4 @@
-gempy~=2024.2.0
+gempy~=2025.1.0
 torch
 arviz
 pyro-ppl
