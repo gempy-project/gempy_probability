@@ -17,7 +17,6 @@ from gempy_engine.core.backend_tensor import BackendTensor
 # Auxiliary libraries
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 import pandas as pd
 # %% md
 # Packages for inversion
@@ -213,7 +212,7 @@ plt.show()
 # %%
 # Create density plots for posterior and prior distributions
 # These plots provide insights into the parameter distributions and their changes.
-from gempy_probability.plot_posterior import default_red, default_blue
+from gempy_probability.modules.plot.plot_posterior import default_red, default_blue
 az.plot_density(
     data=[data, data.prior],
     shade=.9,

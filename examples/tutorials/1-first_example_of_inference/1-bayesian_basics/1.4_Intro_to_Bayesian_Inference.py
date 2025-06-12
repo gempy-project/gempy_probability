@@ -11,7 +11,7 @@ import pyro
 import torch
 from matplotlib.ticker import StrMethodFormatter
 
-from gempy_probability.plot_posterior import PlotPosterior
+from gempy_probability.modules.plot.plot_posterior import PlotPosterior
 
 from _aux_func import infer_model
 
