@@ -80,9 +80,11 @@ def initialize_geo_model(structural_elements: list[gp.data.StructuralElement], e
 
     return geo_model
 
-def setup_geophysics(env_path: str, geo_model: gp.data.GeoModel):
+def setup_geophysics(env_path: str, geo_model: gp.data.GeoModel, densities: list[float]):
     import pandas as pd
     from dotenv import dotenv_values
+    from gempy_engine.core.backend_tensor import BackendTensor
+    
     config = dotenv_values()
 
     df = pd.read_csv(
@@ -97,8 +99,7 @@ def setup_geophysics(env_path: str, geo_model: gp.data.GeoModel):
     interesting_columns = df[['X', 'Y', 'Bouguer_267_complete']]
     # %%
     device_location = interesting_columns[['X', 'Y']]
-    # stack 0 to the z axis
-    device_location['Z'] = 0
+    device_location['Z'] = 0 # * stack 0 to the z axis
 
     gp.set_centered_grid(
         grid=geo_model.grid,
@@ -110,10 +111,9 @@ def setup_geophysics(env_path: str, geo_model: gp.data.GeoModel):
     gravity_gradient = gp.calculate_gravity_gradient(geo_model.grid.centered_grid)
 
     # %%
-    from gempy_engine.core.backend_tensor import BackendTensor
     geo_model.geophysics_input = gp.data.GeophysicsInput(
         tz=BackendTensor.t.array(gravity_gradient),
-        densities=BackendTensor.t.array([2.61, 2.92, 3.1, 2.92, 2.61, 2.61]),
+        densities=BackendTensor.t.array(densities),
     )
 
     return interesting_columns
