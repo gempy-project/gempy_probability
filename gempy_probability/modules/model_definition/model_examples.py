@@ -43,6 +43,8 @@ def model(geo_model: gempy.core.data.GeoModel, normal, y_obs_list):
     # endregion
 
     # region Forward model computation
+    
+    geo_model.counter +=1
 
     # * Compute the geological model
     geo_model.solutions = gempy_engine.compute_model(
@@ -51,7 +53,9 @@ def model(geo_model: gempy.core.data.GeoModel, normal, y_obs_list):
         data_descriptor=geo_model.input_data_descriptor,
         geophysics_input=geo_model.geophysics_input,
     )
-
+    # if i does not exist init
+    
+    
     # Compute and observe the thickness of the geological layer
     model_solutions: gp.data.Solutions = geo_model.solutions
     thickness = apparent_thickness_likelihood(model_solutions)
