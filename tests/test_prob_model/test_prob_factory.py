@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 
 import gempy as gp
 import gempy_probability as gpp
-from gempy_engine.core.backend_tensor import BackendTensor
 from gempy_engine.core.data.interpolation_input import InterpolationInput
 from gempy_probability.core.samplers_data import NUTSConfig
 
@@ -107,7 +106,7 @@ def modify_z_for_surface_point1(
     new_tensor: torch.Tensor = torch.index_put(
         input=interp_input.surface_points.sp_coords,
         indices=(torch.tensor([0]), torch.tensor([2])),  # * This has to be Tensors
-        values=(samples[prior_key]
+        values=(samples[prior_key])
         )
     interp_input.surface_points.sp_coords = new_tensor
     return interp_input
@@ -117,7 +116,6 @@ def _prob_run(geo_model: gp.data.GeoModel, prob_model: gpp.GemPyPyroModel,
               y_obs_list: torch.Tensor) -> az.InferenceData:
     # Run prior sampling and visualization
 
-    # region prior sampling
     prior_inference = gpp.run_predictive(
         prob_model=prob_model,
         geo_model=geo_model,
@@ -126,9 +124,6 @@ def _prob_run(geo_model: gp.data.GeoModel, prob_model: gpp.GemPyPyroModel,
         plot_trace=True
     )
 
-    # endregion
-
-    # region inference
     data = gpp.run_nuts_inference(
         prob_model=prob_model,
         geo_model=geo_model,
@@ -147,7 +142,6 @@ def _prob_run(geo_model: gp.data.GeoModel, prob_model: gpp.GemPyPyroModel,
     )
     data.extend(prior_inference)
     return data
-    # endregion
 
 
 def _plot(data):
