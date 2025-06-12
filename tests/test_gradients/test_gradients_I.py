@@ -1,16 +1,21 @@
 ﻿import numpy as np
 
 import gempy as gp
+import gempy_engine
 import gempy_viewer as gpv
 import os
 import matplotlib.pyplot as plt
 import pytest
 
-data_path = os.path.abspath('../examples/')
+from gempy.modules.data_manipulation import interpolation_input_from_structural_frame
+from gempy_engine.core.backend_tensor import BackendTensor
+
+data_path = os.path.abspath('../../examples/tutorials/')
+SIGMOID_SLOPE = 1000
 
 
-def model(sigoid_slope=100, plot=False):
-    geo_model: gp.data.GeoModel = gp.create_geomodel(
+def _model(sigoid_slope=100, plot=False):
+    gempy_model: gp.data.GeoModel = gp.create_geomodel(
         project_name='Wells',
         extent=[0, 12000, -500, 500, 0, 4000],
         resolution=np.array([10, 1, 10]) * 1,
@@ -20,32 +25,41 @@ def model(sigoid_slope=100, plot=False):
             path_to_surface_points=data_path + "/data/2-layers/2-layers_surface_points.csv"
         )
     )
-    geo_model.interpolation_options.uni_degree = 0
-    geo_model.interpolation_options.mesh_extraction = False
-    geo_model.interpolation_options.sigmoid_slope = sigoid_slope
-    gp.compute_model(
-        gempy_model=geo_model,
-        engine_config=gp.data.GemPyEngineConfig(
-            backend=gp.data.AvailableBackends.PYTORCH
-        )
-    )
+    gempy_model.interpolation_options.uni_degree = 0
+    gempy_model.interpolation_options.mesh_extraction = False
+    gempy_model.interpolation_options.sigmoid_slope = sigoid_slope
+    engine_config = gp.data.GemPyEngineConfig(backend=gp.data.AvailableBackends.PYTORCH)
     
+    BackendTensor.change_backend_gempy(
+        engine_backend=engine_config.backend,
+        use_gpu=engine_config.use_gpu,
+        dtype=engine_config.dtype
+    )
+
+    interpolation_input = interpolation_input_from_structural_frame(gempy_model)
+
+    gempy_model.taped_interpolation_input = interpolation_input  # * This is used for gradient tape
+
+    sp_coords_tensor = gempy_model.taped_interpolation_input.surface_points.sp_coords
+    sp_coords_tensor.requires_grad = True
+
+    gempy_model.solutions = gempy_engine.compute_model(
+        interpolation_input=interpolation_input,
+        options=gempy_model.interpolation_options,
+        data_descriptor=gempy_model.input_data_descriptor,
+        geophysics_input=gempy_model.geophysics_input,
+    )
+
     if plot:
-        gpv.plot_2d(geo_model, show_scalar=False, kwargs_lithology={
+        gpv.plot_2d(gempy_model, show_scalar=False, kwargs_lithology={
             "plot_grid": True,
         })
         plt.show()
-    return geo_model
+    return gempy_model
 
-
-@pytest.mark.skip(reason="This is just a test")
-def test_this_model():
-    model(-1, plot=True)
-    
-SIGMOID_SLOPE = 1000
 
 def test_gradients_numpy():
-    geo_model = model(SIGMOID_SLOPE, plot=True)
+    geo_model = _model(SIGMOID_SLOPE, plot=True)
 
     gpv.plot_2d(geo_model, kwargs_lithology={"plot_grid": True})
 
@@ -112,7 +126,7 @@ def test_gradients_numpy():
 
 
 def test_gradients_I():
-    geo_model = model(sigoid_slope=SIGMOID_SLOPE, plot=True)
+    geo_model = _model(sigoid_slope=SIGMOID_SLOPE, plot=True)
     # * This is the activated block
     block = geo_model.solutions.octrees_output[0].last_output_center.final_block
 
@@ -161,36 +175,3 @@ def test_gradients_I():
         )
 
 
-import torch
-import torch.nn.functional as F
-
-
-@pytest.mark.skip(reason="This is just a test")
-def test_smooth_step_activation():
-    def smooth_step_activation(x, lower_bound=5, upper_bound=10):
-        # This scale can be adjusted to make the transition sharper or smoother
-        scale = torch.tensor(10.0)  # A higher scale will make the transition sharper
-
-        # Smooth approximation of Heaviside step function
-        step_lower = F.sigmoid(scale * (x - lower_bound))
-        step_upper = F.sigmoid(scale * (-x + upper_bound))
-
-        # The model is activated (returns x) when x is between lower_bound and upper_bound
-        # and is deactivated (returns 0) otherwise.
-        # return x * step_lower * step_upper
-        return x  * step_lower
-
-
-    # Dummy data
-    x = torch.linspace(0, 15, 100)
-
-    # Apply the smooth step activation
-    y = smooth_step_activation(x)
-
-    # Plot the result if you are in an environment that supports plotting
-    import matplotlib.pyplot as plt
-
-    plt.plot(x.numpy(), y.numpy())
-    plt.xlabel('x')
-    plt.ylabel('Activated Output')
-    plt.show()
