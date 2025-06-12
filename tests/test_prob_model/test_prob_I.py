@@ -38,8 +38,7 @@ def test_basic_gempy_I() -> None:
 
     geo_model.grid.active_grids = gp.data.Grid.GridTypes.CUSTOM
     assert geo_model.grid.values.shape[0] == 100, "Custom grid should have 100 cells"
-    geo_model.counter = 0
-    gp.compute_model(gempy_model=geo_model)
+    gp.compute_model(gempy_model=geo_model, validate_serialization=False)
     BackendTensor.change_backend_gempy(engine_backend=gp.data.AvailableBackends.PYTORCH)
 
     normal = dist.Normal(
@@ -74,7 +73,7 @@ def _prob_run(geo_model: gp.data.GeoModel, prob_model: callable,
         num_samples=50
     )
     prior = predictive(geo_model, normal, y_obs_list)
-    print("Number of interpolations: ", geo_model.counter)
+    # print("Number of interpolations: ", geo_model.counter)
 
     data = az.from_pyro(prior=prior)
     az.plot_trace(data.prior)
@@ -109,7 +108,7 @@ def _prob_run(geo_model: gp.data.GeoModel, prob_model: callable,
     data = az.from_pyro(posterior=mcmc, prior=prior, posterior_predictive=posterior_predictive)
     # endregion
 
-    print("Number of interpolations: ", geo_model.counter)
+    # print("Number of interpolations: ", geo_model.counter)
 
     if True: # * Save the arviz data
         data.to_netcdf("arviz_data.nc")
