@@ -2,6 +2,7 @@ import gempy as gp
 import gempy.core.data
 import gempy_engine
 from gempy.modules.data_manipulation.engine_factory import interpolation_input_from_structural_frame
+from gempy_probability.modules.likelihoods import apparent_thickness_likelihood
 
 import pyro
 import pyro.distributions as dist
@@ -53,7 +54,7 @@ def model(geo_model: gempy.core.data.GeoModel, normal, y_obs_list):
 
     # Compute and observe the thickness of the geological layer
     model_solutions: gp.data.Solutions = geo_model.solutions
-    thickness = _likelihood(model_solutions)
+    thickness = apparent_thickness_likelihood(model_solutions)
 
     # endregion
 
@@ -67,14 +68,3 @@ def model(geo_model: gempy.core.data.GeoModel, normal, y_obs_list):
     )
 
 
-def _likelihood(model_solutions: gp.data.Solutions) -> torch.Tensor:
-    """
-    This function computes the thickness of the geological layer.
-    """
-    simulated_well = model_solutions.octrees_output[0].last_output_center.custom_grid_values
-    thickness = simulated_well.sum()
-    pyro.deterministic(
-        name=r'$\mu_{thickness}$',
-        value=thickness.detach()  # * This is only for az to track progress
-    )
-    return thickness
