@@ -106,7 +106,7 @@ def modify_z_for_surface_point1(
     new_tensor: torch.Tensor = torch.index_put(
         input=interp_input.surface_points.sp_coords,
         indices=(torch.tensor([0]), torch.tensor([2])),  # * This has to be Tensors
-        values=(samples[prior_key]
+        values=(samples[prior_key])
         )
     interp_input.surface_points.sp_coords = new_tensor
     return interp_input
