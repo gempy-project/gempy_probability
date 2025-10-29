@@ -1,7 +1,7 @@
 import pyro
 import torch
 from pyro.distributions import Distribution
-from typing import Callable, Dict
+from typing import Callable, Dict, Optional
 
 import gempy as gp
 from gempy_engine.core.backend_tensor import BackendTensor
@@ -17,7 +17,7 @@ def make_gempy_pyro_model(
             [Dict[str, Distribution], gp.data.GeoModel],
             gp.data.InterpolationInput
         ],
-        likelihood_fn: Callable[[gp.data.Solutions], Distribution],
+        likelihood_fn: Optional[Callable[[gp.data.Solutions], Distribution]],
         obs_name: str = "obs"
 ) -> GemPyPyroModel:
     """
@@ -115,6 +115,9 @@ def make_gempy_pyro_model(
         )
 
         # 4) Wrap in likelihood & observe
+        if likelihood_fn is None:
+            return
+        
         lik_dist = likelihood_fn(simulated)
         pyro.sample(obs_name, lik_dist, obs=obs_data)
 
