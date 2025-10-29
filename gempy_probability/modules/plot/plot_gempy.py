@@ -52,7 +52,7 @@ def plot_gempy(
     import gempy as gp
     from gempy_viewer.API._plot_2d_sections_api import plot_sections
     from gempy_viewer.core.data_to_show import DataToShow
-    
+
     plot_kwargs = plot_kwargs or {}
 
     # Iterate through samples
@@ -65,13 +65,16 @@ def plot_gempy(
 
         # Plot the updated model
         default_plot_kwargs = {
-            'kwargs_boundaries': {
-                "linewidth": 0.5,
-                "alpha": 0.1,
-            },
-            'kwargs_surface_points': {
-                'alpha': 0.1
-            },
+                'kwargs_boundaries'    : {
+                        "linewidth": 0.5,
+                        "alpha"    : 0.1,
+                },
+                'kwargs_surface_points': {
+                        'alpha': 0.1
+                },
+                'kwargs_orientations'  : {
+                        'alpha': 0.02,
+                }
         }
         # Merge with user-provided kwargs (user kwargs override defaults)
         final_plot_kwargs = {**default_plot_kwargs, **plot_kwargs}
