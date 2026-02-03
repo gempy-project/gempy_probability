@@ -67,7 +67,7 @@ def plot_gempy(
         default_plot_kwargs = {
                 'kwargs_boundaries'    : {
                         "linewidth": 0.5,
-                        "alpha"    : 0.1,
+                        "alpha"    : 0.05,
                 },
                 'kwargs_surface_points': {
                         'alpha': 0.1
