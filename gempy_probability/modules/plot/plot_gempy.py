@@ -12,7 +12,8 @@ def plot_gempy(
         samples: np.ndarray,
         update_model_fn: Callable,
         gempy_plot: Plot2D,
-        plot_kwargs: Optional[dict] = None
+        plot_kwargs: Optional[dict] = None,
+        contour_colors: Optional[list] = None
 ):
     """
     General function to plot GemPy models with uncertainty from prior/posterior samples.
@@ -67,7 +68,8 @@ def plot_gempy(
         default_plot_kwargs = {
                 'kwargs_boundaries'    : {
                         "linewidth": 0.5,
-                        "alpha"    : 0.05,
+                        "alpha"    : 0.1,
+                        "contour_colors": contour_colors
                 },
                 'kwargs_surface_points': {
                         'alpha': 0.1

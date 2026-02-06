@@ -97,8 +97,8 @@ def make_gempy_pyro_model(
     >>> #   Predictive(pyro_model, num_samples=100)(geo_model, obs_tensor)
     """
 
-    BackendTensor.change_backend_gempy(engine_backend=gp.data.AvailableBackends.PYTORCH)
-    
+    BackendTensor.change_backend_gempy(engine_backend=gp.data.AvailableBackends.PYTORCH, grads=True)
+
     def model(geo_model: gp.data.GeoModel, obs_data: torch.Tensor):
         # 1) Sample from the user‐supplied priors
         samples: Dict[str, torch.Tensor] = {}
@@ -118,11 +118,23 @@ def make_gempy_pyro_model(
         if likelihood_fn is None:
             return
         
-        lik_dist = likelihood_fn(simulated)
-        pyro.sample(obs_name, lik_dist, obs=obs_data)
+        # lik_dist = likelihood_fn(simulated)
+        # pyro.sample(obs_name, lik_dist, obs=obs_data)
+
+        if isinstance(likelihood_fn, (list, tuple)):
+            for i, d in enumerate(likelihood_fn):
+                pyro.sample(
+                    name=f"{obs_name}_{i}",
+                    fn=d(simulated),
+                    obs=(obs_data[i] if isinstance(obs_data, (list, tuple)) else obs_data)
+                )
+        else:
+            pyro.sample(
+                name=obs_name,
+                fn=likelihood_fn(simulated),
+                obs=obs_data)
 
     return model
-
 
 
 def make_generic_pyro_model(
@@ -138,6 +150,7 @@ def make_generic_pyro_model(
       - likelihood_fn: fn(simulated)-> a Pyro Distribution over data
       - obs_name: name of the observed site
     """
+
     def model(geo_model, obs_data):
         # 1) Sample each prior
         samples = {}

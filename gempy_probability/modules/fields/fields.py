@@ -62,3 +62,36 @@ def total_model_entropy(ie: np.ndarray) -> float:
     :return:
     """
     return float(np.mean(ie))
+
+
+class OnlineProbability:
+    """
+    Compute the probabilities and entropy on the go as we compute the models.
+    """
+    def __init__(self, n_cells: int, unique_lithologies: np.ndarray):
+        self.n_cells = n_cells
+        self.unique_lithologies = unique_lithologies.astype(int)
+        self.n_samples = 0
+        self.probability_field = np.zeros((len(unique_lithologies), n_cells))
+
+    def update(self, lith_block: np.ndarray):
+        self.n_samples += 1
+        lith_block = np.round(lith_block).astype(int)
+        
+        # Incremental update of the probability field
+        # P_n = ((n-1) * P_{n-1} + indicator) / n
+        for l_idx, l_val in enumerate(self.unique_lithologies):
+            indicator = (lith_block == l_val).astype(float)
+            self.probability_field[l_idx] = ((self.n_samples - 1) * self.probability_field[l_idx] + indicator) / self.n_samples
+
+    @property
+    def entropy(self):
+        return information_entropy(self.probability_field)
+
+
+def online_probability(n_cells: int, unique_lithologies: np.ndarray):
+    """
+    Deprecated, use OnlineProbability class instead
+    """
+    warnings.warn("This function is Deprecated, please use the OnlineProbability class instead")
+    return OnlineProbability(n_cells, unique_lithologies)

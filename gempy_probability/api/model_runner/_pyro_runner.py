@@ -6,13 +6,16 @@ from pyro.infer import NUTS
 from pyro.infer import Predictive
 from pyro.infer.autoguide import init_to_mean
 
+from typing import Union
+
 import gempy as gp
 import gempy_probability as gpp
 from ...core.samplers_data import NUTSConfig
 
 
 def run_predictive(prob_model: gpp.GemPyPyroModel, geo_model: gp.data.GeoModel,
-                   y_obs_list: torch.Tensor, n_samples: int, plot_trace: bool = False) -> az.InferenceData:
+                   y_obs_list: Union[torch.Tensor, list[torch.Tensor], tuple[torch.Tensor, ...]], 
+                   n_samples: int, plot_trace: bool = False) -> az.InferenceData:
     predictive = Predictive(
         model=prob_model,
         num_samples=n_samples
@@ -29,7 +32,8 @@ def run_predictive(prob_model: gpp.GemPyPyroModel, geo_model: gp.data.GeoModel,
 
 
 def run_nuts_inference(prob_model: gpp.GemPyPyroModel, geo_model: gp.data.GeoModel,
-                       y_obs_list: torch.Tensor, config: NUTSConfig, plot_trace: bool = False,
+                       y_obs_list: Union[torch.Tensor, list[torch.Tensor], tuple[torch.Tensor, ...]], 
+                       config: NUTSConfig, plot_trace: bool = False,
                        run_posterior_predictive: bool = False) -> az.InferenceData:
     nuts_kernel = NUTS(
         prob_model,
@@ -57,7 +61,7 @@ def run_mcmc_for_NUTS(
         geo_model: gp.data.GeoModel,
         nuts_kernel: NUTS,
         prob_model: gpp.GemPyPyroModel,
-        y_obs_list: torch.Tensor,
+        y_obs_list: Union[torch.Tensor, list[torch.Tensor], tuple[torch.Tensor, ...]],
         num_samples: int,
         warmup_steps: int,
         plot_trace: bool = False,
